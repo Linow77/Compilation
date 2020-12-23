@@ -3,7 +3,7 @@
 
 int main() {
 
-	AUTOMATEAFN afnVide,afnMotVide,afncaractere, afnUnion;
+	AUTOMATEAFN afnVide,afnMotVide,afncaractere1,afncaractere2, afnUnion;
 
 	afnVide = langageVide();
 	printf("/**** Langage Vide ****/\n");
@@ -13,11 +13,17 @@ int main() {
 	printf("\n/**** Langage Mot Vide ****/\n");
 	AfficherAutomate(afnMotVide);
 
-	afncaractere = langagecaractere('a');
+	afncaractere1 = langagecaractere('a');
 	printf("\n/**** Langage Caractere ****/\n");
-	AfficherAutomate(afncaractere);
+	AfficherAutomate(afncaractere1);
 
-	afnUnion = unionDeDeuxAutomates(afnMotVide, afncaractere);
+	afncaractere2 = langagecaractere('b');
+	printf("\n/**** Langage Caractere ****/\n");
+	AfficherAutomate(afncaractere2);
+
+	afnUnion = unionDeDeuxAutomates(afncaractere1, afncaractere2);
+	printf("\n/**** Langage Union ****/\n");
+	AfficherAutomate(afnUnion);
 	return 1;
 
 }
@@ -156,16 +162,25 @@ AUTOMATEAFN langagecaractere(char caractere){
 /**AUTOMATE FINI NON DETERMINISTES PLUS EVOLUES **/
 
 AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
-	AUTOMATEAFN afn;
+	//Verifier que les deux afn ne sont pas identique sinon directement renvoyer l'un des deux
+	
 	//Check si l'un des états initials de afn1/afn2 est accepteur
 	//Création d'un état initial commun qui va vers les arrivées des états initiaux de afn1 et afn2
 
 	//tailleQ = tailleQ1 -1 + tailleQ2 -1 + 1
-	afn.tailleQ = afn1.tailleQ + afn2.tailleQ - 1;
-	printf("tailleQ1:%d tailleQ2:%d tailleQ:%d\n",afn1.tailleQ, afn2.tailleQ, afn.tailleQ );
-	
-	afn1.Q = (unsigned int *) realloc( afn1.Q, afn.tailleQ * sizeof(unsigned int) );
+	int nouvelleTailleQ = afn1.tailleQ + afn2.tailleQ - 1;
 
+	//réallocation de Q
+	afn1.Q = (unsigned int *) realloc( afn1.Q, nouvelleTailleQ * sizeof(unsigned int) );
 
-	return afn;
+	//ajout des états de afn2 dans afn1.Q
+	for(int i=1; i<afn2.tailleQ; i++){ //on ne récupère pas l'état initial de afn2, on commence donc a 1
+		printf("afn1:%d=%d et afn2:%d=%d\n", afn1.tailleQ-1+i,afn1.Q[afn1.tailleQ-1+i],i,afn2.Q[i]);
+		afn1.Q[afn1.tailleQ-1+i] = afn2.Q[i]+afn1.tailleQ-1; //on démarre le compte des etats de afn2 après ceux de afn1
+	}
+
+	//On enregistre la nouvelle taille de afn1
+	afn1.tailleQ = nouvelleTailleQ;
+
+	return afn1;
 }
