@@ -136,7 +136,8 @@ AUTOMATEAFN langagecaractere(char caractere){
 
 	afn.Z = (char*)malloc(sizeof(char));	// allouer que la taille d'un char ?
 	afn.Z[0] = caractere;
-	afn.Z[1] = '\0';
+	afn.Z[1] = 'o'; //temporaire pour les tests
+	afn.Z[2] = '\0';
 
 	afn.s = 0;
 
@@ -162,25 +163,62 @@ AUTOMATEAFN langagecaractere(char caractere){
 /**AUTOMATE FINI NON DETERMINISTES PLUS EVOLUES **/
 
 AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
+	int nouvelleTailleQ,verifCaractere;
+	int i,j;
+
+	//Allocation de Ztemp au maximum (afn1.Z + afn2.Z)
+	char* Ztemp = (char*)malloc(sizeof(char)*(strlen(afn1.Z)+strlen(afn2.Z)));
+	strcpy(Ztemp,afn1.Z); //copie de afn1.Z dans Ztemp
+
 	//Verifier que les deux afn ne sont pas identique sinon directement renvoyer l'un des deux
 	
 	//Check si l'un des états initials de afn1/afn2 est accepteur
 	//Création d'un état initial commun qui va vers les arrivées des états initiaux de afn1 et afn2
 
+	//Création de Q
 	//tailleQ = tailleQ1 -1 + tailleQ2 -1 + 1
-	int nouvelleTailleQ = afn1.tailleQ + afn2.tailleQ - 1;
+	nouvelleTailleQ = afn1.tailleQ + afn2.tailleQ - 1;
 
 	//réallocation de Q
 	afn1.Q = (unsigned int *) realloc( afn1.Q, nouvelleTailleQ * sizeof(unsigned int) );
 
 	//ajout des états de afn2 dans afn1.Q
-	for(int i=1; i<afn2.tailleQ; i++){ //on ne récupère pas l'état initial de afn2, on commence donc a 1
-		printf("afn1:%d=%d et afn2:%d=%d\n", afn1.tailleQ-1+i,afn1.Q[afn1.tailleQ-1+i],i,afn2.Q[i]);
+	for(i=1; i<afn2.tailleQ; i++){ //on ne récupère pas l'état initial de afn2, on commence donc a 1
 		afn1.Q[afn1.tailleQ-1+i] = afn2.Q[i]+afn1.tailleQ-1; //on démarre le compte des etats de afn2 après ceux de afn1
 	}
 
 	//On enregistre la nouvelle taille de afn1
 	afn1.tailleQ = nouvelleTailleQ;
 
+	//Creation de Z
+	//Determinisation des nouveaux caracteres
+	for(i=0;i<strlen(afn2.Z);i++){		//Pour chaque caractere de afn2
+		for(j=0;j<strlen(afn1.Z);j++){	//Est il deja present dans afn1
+			printf("afn1:%d et afn2:%d\n",j,i );
+			verifCaractere=0; //on a pas trouvé le caractère
+			if(afn2.Z[i]==afn1.Z[j]){ 	//Si oui on passe au prochain caractere de afn2
+				printf("meme caractere :%c et %c\n",afn2.Z[i],afn1.Z[j] );
+				verifCaractere=1;
+				
+				
+			}else{ //Sinon on regarde s'il est présent dans un autre
+				printf("caractere different %c et %c\n",afn2.Z[i],afn1.Z[j] );
+			}
+
+
+		}
+
+		if(!verifCaractere){ //si on a pas trouvé le caractere dans tout l'aphabet de afn1 alors on l'ajoute
+				printf("ajout de %c\n", afn2.Z[i]);
+				Ztemp[strlen(afn1.Z)] = afn2.Z[i];
+
+		}
+	}
+	printf("Z:%s\n",Ztemp );
+
+	//On modifie afn1.Z par Ztemp
+	//reallocation de afn1.Z
+	afn1.Z = (char*) realloc(afn1.Z,strlen(Ztemp)*sizeof(char));
+	strcpy(afn1.Z,Ztemp);
 	return afn1;
 }
