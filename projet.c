@@ -21,7 +21,7 @@ int main() {
 	printf("\n/**** Langage Caractere ****/\n");
 	AfficherAutomate(afncaractere2);
 
-	afnUnion = unionDeDeuxAutomates(afncaractere1, afncaractere2);
+	afnUnion = unionDeDeuxAutomates(afncaractere1, afnMotVide);
 	printf("\n/**** Langage Union ****/\n");
 	AfficherAutomate(afnUnion);
 	return 1;
@@ -112,7 +112,7 @@ AUTOMATEAFN langageMotVide(){
 	afn.Q = (unsigned int*)malloc(sizeof(unsigned int));
 	afn.Q[0] = 0;
 	afn.tailleQ = 1;
-	afn.Z = "";
+	afn.Z = ""; //Avec strlen le mot vide ne s'affiche pas dans le langage après une union
 
 	afn.s = 0;
 
@@ -128,10 +128,11 @@ AUTOMATEAFN langageMotVide(){
 
 AUTOMATEAFN langagecaractere(char caractere){
 	AUTOMATEAFN afn;
-	afn.tailleQ = 2;
+	afn.tailleQ = 3;
 	afn.Q = (unsigned int*)malloc(sizeof(unsigned int)*afn.tailleQ);
 	afn.Q[0] = 0;
 	afn.Q[1] = 1;
+	afn.Q[2] = 2;//temporaire pour les tests
 	
 
 	afn.Z = (char*)malloc(sizeof(char));	// allouer que la taille d'un char ?
@@ -142,9 +143,11 @@ AUTOMATEAFN langagecaractere(char caractere){
 
 	afn.s = 0;
 
-	afn.F = (int*)malloc(sizeof(int));
+	afn.tailleF = 2;
+	afn.F = (int*)malloc(sizeof(int)*afn.tailleF);
 	afn.F[0] = 1;
-	afn.tailleF = 1;
+	afn.F[1] = 2;//temporaire pour les tests
+	//afn.F[2] = 0;//temporaire pour les tests
 
 	afn.D = (char**)malloc(sizeof(char*));
 	afn.D[0] = (char*)malloc(sizeof(char)); // allouer que la taille d'un char ?
@@ -199,7 +202,7 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 			}
 		}
 	}
-	
+	//printf("etatInitialAccepteur:%d",etatInitialAccepteur);
 	/*Modification de afn1 pour y ajouter le langage reconnu par afn2*/
 
 	//Création de Q
@@ -210,12 +213,12 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	afn1.Q = (unsigned int *) realloc( afn1.Q, nouvelleTailleQ * sizeof(unsigned int) );
 
 	//ajout des états de afn2 dans afn1.Q
-	for(i=1; i<afn2.tailleQ; i++){ //on ne récupère pas l'état initial de afn2, on commence donc a 1
-		afn1.Q[afn1.tailleQ-1+i] = afn2.Q[i]+afn1.tailleQ-1; //on démarre le compte des etats de afn2 après ceux de afn1
+	for(i=0; i<afn2.tailleQ; i++){ //on ne récupère pas l'état initial de afn2
+		if(afn2.Q[i]!=0){
+			afn1.Q[afn1.tailleQ-1+i] = afn2.Q[i]+afn1.tailleQ-1; //on démarre le compte des etats de afn2 après ceux de afn1
+		}
+		
 	}
-
-	//On enregistre la nouvelle taille de afn1
-	afn1.tailleQ = nouvelleTailleQ;
 
 	//Creation de Z
 	//Determinisation des nouveaux caracteres
@@ -223,25 +226,25 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 		verifCaractere=0; //on a pas trouvé le caractère
 		for(j=0;j<strlen(afn1.Z);j++){	//Est il deja present dans afn1
 			if(!verifCaractere){ //si on a trouvé le caractère pas besoin de continuer de le chercher
-				printf("afn1:%d et afn2:%d\n",j,i );
+				//printf("afn1:%d et afn2:%d\n",j,i );
 				if(afn2.Z[i]==afn1.Z[j]){ 	//Si oui on passe au prochain caractere de afn2
-					printf("meme caractere :%c et %c\n",afn2.Z[i],afn1.Z[j] );
+					//printf("meme caractere :%c et %c\n",afn2.Z[i],afn1.Z[j] );
 					verifCaractere=1;
 					
 					
 				}else{ //Sinon on regarde s'il est présent dans un autre
-					printf("caractere different %c et %c\n",afn2.Z[i],afn1.Z[j] );
+					//printf("caractere different %c et %c\n",afn2.Z[i],afn1.Z[j] );
 				}
 			}
 		}
 
 		if(!verifCaractere){ //si on a pas trouvé le caractere dans tout l'aphabet de afn1 alors on l'ajoute
-				printf("ajout de %c\n", afn2.Z[i]);
+				//printf("ajout de %c\n", afn2.Z[i]);
 				Ztemp[strlen(afn1.Z)] = afn2.Z[i];
 
 		}
 	}
-	printf("Z:%s\n",Ztemp );
+	//printf("Z:%s\n",Ztemp );
 
 	//On modifie afn1.Z par Ztemp
 	//reallocation de afn1.Z
@@ -249,30 +252,32 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	strcpy(afn1.Z,Ztemp);
 
 	//s n'est pas modifié il reste 0
-/*
+
 	//Creation de F
 	//on realloue la afn1.tailleF  + afn2.tailleF -1(si l'état initial de afn2 est accepteur et celui de afn1 aussi)
 	nouvelleTailleF = afn1.tailleF + afn2.tailleF;
 	if(etatInitialAccepteur==3){
 		nouvelleTailleF--;
 	}
+	//printf("taille:%d\n",nouvelleTailleF );
 	afn1.F = (int*) realloc(afn1.F,nouvelleTailleF*sizeof(int));
 
 	//ajout des F de afn2 et l'etat initial si accepteur
-	for(i=0; i<afn2.tailleF;i++){
+	for(i=afn1.tailleF; i<nouvelleTailleF;i++){
 		//on ajoute l'etat initial seulement si l'etat initial de afn2 est accepteur et pas celui de afn1
 		if(etatInitialAccepteur==2 && afn2.F[i]==0){
 			afn1.F[afn1.tailleF-1+i]=afn2.F[i];
 		
 		}else{//sinon on ajoute les etats de afn2 en démarrant le compte après ceux de afn1
-			afn1.F[afn1.tailleF-1+i]=afn2.F[i]+afn1.tailleF-1;
+			afn1.F[i]=afn2.F[i-afn1.tailleF]+afn1.tailleQ-1;
 		}
 		
 	}
 
-	//enregistre la nouvelle taille de F
+	//enregistre les nouvelle taille de Q et F
 	afn1.tailleF=nouvelleTailleF;
-*/
+	afn1.tailleQ = nouvelleTailleQ;
+
 	return afn1;
 }
 
