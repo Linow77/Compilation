@@ -35,3 +35,4 @@ AUTOMATEAFN langageVide(); //renvoie un automate standard reconnaissant le langa
 AUTOMATEAFN langageMotVide(); //renvoie un automate standard reconnaissant le langage composÃ© du seul mot vide
 AUTOMATEAFN langagecaractere(char caractere);
 AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2);
+int afn_identique(AUTOMATEAFN afn1, AUTOMATEAFN anf2);

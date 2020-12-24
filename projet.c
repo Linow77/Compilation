@@ -137,7 +137,8 @@ AUTOMATEAFN langagecaractere(char caractere){
 	afn.Z = (char*)malloc(sizeof(char));	// allouer que la taille d'un char ?
 	afn.Z[0] = caractere;
 	afn.Z[1] = 'o'; //temporaire pour les tests
-	afn.Z[2] = '\0';
+	afn.Z[2] = 'p'; //temporaire pour les tests
+	afn.Z[3] = '\0';
 
 	afn.s = 0;
 
@@ -163,7 +164,8 @@ AUTOMATEAFN langagecaractere(char caractere){
 /**AUTOMATE FINI NON DETERMINISTES PLUS EVOLUES **/
 
 AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
-	int nouvelleTailleQ,verifCaractere;
+	int verifCaractere=0,etatInitialAccepteur=0;
+	int nouvelleTailleQ,nouvelleTailleF;
 	int i,j;
 
 	//Allocation de Ztemp au maximum (afn1.Z + afn2.Z)
@@ -171,9 +173,34 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	strcpy(Ztemp,afn1.Z); //copie de afn1.Z dans Ztemp
 
 	//Verifier que les deux afn ne sont pas identique sinon directement renvoyer l'un des deux
+	if(afn_identique(afn1,afn2)){
+		return afn1;
+	}
+
+	//Verif si l'etat initial de afn1 et afn2 sont accepteur
+	//on vérfie tout F car l'état 0 n'est pas forcément le premier accepteur
+	for(i=0;i<afn1.tailleF;i++){ 
+		if(afn1.F[i]==0){
+			etatInitialAccepteur=1; // afn1 a son etat initial accepteur
+		}
+	}
+	//Verif si l'etat initialial de afn1 n'est pas déja accepteur
+	//on vérfie tout F car l'état 0 n'est pas forcément le premier accepteur
+	if(!etatInitialAccepteur){
+		for(i=0;i<afn2.tailleF;i++){ 
+			if(afn2.F[i]==0){
+				etatInitialAccepteur=2;// afn2 a son etat initial accepteur
+			}
+		}
+	}else{
+		for(i=0;i<afn2.tailleF;i++){ 
+			if(afn2.F[i]==0){
+				etatInitialAccepteur=3;// les deux afn ont leurs etats initiaux accepteurs
+			}
+		}
+	}
 	
-	//Check si l'un des états initials de afn1/afn2 est accepteur
-	//Création d'un état initial commun qui va vers les arrivées des états initiaux de afn1 et afn2
+	/*Modification de afn1 pour y ajouter le langage reconnu par afn2*/
 
 	//Création de Q
 	//tailleQ = tailleQ1 -1 + tailleQ2 -1 + 1
@@ -193,19 +220,19 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	//Creation de Z
 	//Determinisation des nouveaux caracteres
 	for(i=0;i<strlen(afn2.Z);i++){		//Pour chaque caractere de afn2
+		verifCaractere=0; //on a pas trouvé le caractère
 		for(j=0;j<strlen(afn1.Z);j++){	//Est il deja present dans afn1
-			printf("afn1:%d et afn2:%d\n",j,i );
-			verifCaractere=0; //on a pas trouvé le caractère
-			if(afn2.Z[i]==afn1.Z[j]){ 	//Si oui on passe au prochain caractere de afn2
-				printf("meme caractere :%c et %c\n",afn2.Z[i],afn1.Z[j] );
-				verifCaractere=1;
-				
-				
-			}else{ //Sinon on regarde s'il est présent dans un autre
-				printf("caractere different %c et %c\n",afn2.Z[i],afn1.Z[j] );
+			if(!verifCaractere){ //si on a trouvé le caractère pas besoin de continuer de le chercher
+				printf("afn1:%d et afn2:%d\n",j,i );
+				if(afn2.Z[i]==afn1.Z[j]){ 	//Si oui on passe au prochain caractere de afn2
+					printf("meme caractere :%c et %c\n",afn2.Z[i],afn1.Z[j] );
+					verifCaractere=1;
+					
+					
+				}else{ //Sinon on regarde s'il est présent dans un autre
+					printf("caractere different %c et %c\n",afn2.Z[i],afn1.Z[j] );
+				}
 			}
-
-
 		}
 
 		if(!verifCaractere){ //si on a pas trouvé le caractere dans tout l'aphabet de afn1 alors on l'ajoute
@@ -220,5 +247,75 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	//reallocation de afn1.Z
 	afn1.Z = (char*) realloc(afn1.Z,strlen(Ztemp)*sizeof(char));
 	strcpy(afn1.Z,Ztemp);
+
+	//s n'est pas modifié il reste 0
+/*
+	//Creation de F
+	//on realloue la afn1.tailleF  + afn2.tailleF -1(si l'état initial de afn2 est accepteur et celui de afn1 aussi)
+	nouvelleTailleF = afn1.tailleF + afn2.tailleF;
+	if(etatInitialAccepteur==3){
+		nouvelleTailleF--;
+	}
+	afn1.F = (int*) realloc(afn1.F,nouvelleTailleF*sizeof(int));
+
+	//ajout des F de afn2 et l'etat initial si accepteur
+	for(i=0; i<afn2.tailleF;i++){
+		//on ajoute l'etat initial seulement si l'etat initial de afn2 est accepteur et pas celui de afn1
+		if(etatInitialAccepteur==2 && afn2.F[i]==0){
+			afn1.F[afn1.tailleF-1+i]=afn2.F[i];
+		
+		}else{//sinon on ajoute les etats de afn2 en démarrant le compte après ceux de afn1
+			afn1.F[afn1.tailleF-1+i]=afn2.F[i]+afn1.tailleF-1;
+		}
+		
+	}
+
+	//enregistre la nouvelle taille de F
+	afn1.tailleF=nouvelleTailleF;
+*/
 	return afn1;
+}
+
+int afn_identique(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
+	int i;
+
+	//Verif de la taille de Q, Z, F,D et la valeur de s
+	if(afn1.tailleQ != afn2.tailleQ || 
+		strlen(afn1.Z)!=strlen(afn2.Z) ||
+		afn1.s != afn2.s ||
+		afn1.tailleF != afn2.tailleF ||
+		afn1.tailleD != afn2.tailleD){
+		return 0;
+	}
+
+	//Verif du contenu de Q
+	for (i=0;i<afn1.tailleQ;i++){
+		if (afn1.Q[i]!=afn2.Q[i]){
+			return 0;
+		}
+	}
+
+	//Verif du contenu de Z
+	for (i=0;i<strlen(afn1.Z);i++){
+		if(afn1.Z[i]!=afn2.Z[i]){
+			return 0;
+		}
+	}
+
+	//Verif du contenu de F
+	for (i=0;i<afn1.tailleF;i++){
+		if(afn1.Z[i]!=afn2.Z[i]){
+			return 0;
+		}
+	}
+
+	//Verif du contenu de D
+	for (i=0;i<afn1.tailleD;i++){
+		if(afn1.Z[i]!=afn2.Z[i]){
+			return 0;
+		}
+	}
+	
+	return 1; //si tout est identique
+	
 }
