@@ -21,7 +21,8 @@ int main() {
 	printf("\n/**** Langage Caractere ****/\n");
 	AfficherAutomate(afncaractere2);
 
-	afnUnion = unionDeDeuxAutomates(afncaractere1, afnMotVide);
+	afnUnion = unionDeDeuxAutomates(afncaractere1, afncaractere2);
+
 	printf("\n/**** Langage Union ****/\n");
 	AfficherAutomate(afnUnion);
 	return 1;
@@ -77,6 +78,7 @@ void AfficherAutomate(AUTOMATEAFN afn){
 	//printf("taille de D: %d\n",tailleD);
 	if(afn.D!=NULL){
 		printf("Ensemble des etats transitions (D): ");
+
 		for(i=0;i<afn.tailleD;i++){
 			printf("%s, ",afn.D[i]);
 		}
@@ -153,11 +155,13 @@ AUTOMATEAFN langagecaractere(char caractere){
 	afn.D[0] = (char*)malloc(sizeof(char)); // allouer que la taille d'un char ?
 	//creation de la chaine "etat1-caractere-etat2"
 	char * chaine =NULL;
-	chaine = (char*)malloc(sizeof(char)*TAILLE_CHAINE_TRANSITION);
+	chaine = (char*)malloc(sizeof(char)); //alouer que la taille d'un char ?
 	chaine[0] = '0';
-	chaine[1] = caractere;
-	chaine[2] = '1';
-	chaine[3] = '\0';
+	chaine[1] = '/';
+	chaine[2] = caractere;
+	chaine[3] = '/';
+	chaine[4] = '1';
+	chaine[5] = '\0';
 	afn.D[0]=chaine;
 	afn.tailleD = 1;
 
@@ -168,8 +172,17 @@ AUTOMATEAFN langagecaractere(char caractere){
 
 AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	int verifCaractere=0,etatInitialAccepteur=0;
-	int nouvelleTailleQ,nouvelleTailleF;
-	int i,j;
+	int nouvelleTailleQ,nouvelleTailleF, nouvelleTailleD;
+	int etat;
+	int i,j,k,y;
+	char delim[] = "/";
+	char ** transitionTmp;
+
+	//Allocation de transitionTmp
+	transitionTmp = (char**)malloc(sizeof(char*)*NOMBRE_ELEMENT_TRANSITION);
+	for (i=0;i<NOMBRE_ELEMENT_TRANSITION;i++){
+		transitionTmp[i] = (char*)malloc(sizeof(char)); //char ?
+	}
 
 	//Allocation de Ztemp au maximum (afn1.Z + afn2.Z)
 	char* Ztemp = (char*)malloc(sizeof(char)*(strlen(afn1.Z)+strlen(afn2.Z)));
@@ -274,9 +287,81 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 		
 	}
 
-	//enregistre les nouvelle taille de Q et F
-	afn1.tailleF=nouvelleTailleF;
+	/* Creation de D*/
+	//reallocation de D
+	//taille de D = afn1.tailleD + afn2.tailleD
+	nouvelleTailleD = afn1.tailleD + afn2.tailleD;
+	afn1.D = (char**)realloc(afn1.D,sizeof(char*)*nouvelleTailleD);
+	for(i=0;i<nouvelleTailleD;i++){
+		afn1.D[i] = realloc(afn1.D[i],sizeof(char));
+	}
+
+	//On ajoute les etats de afn2 en les incrémentant sauf l'etat initial 0
+	//printf("afn1:%d et afntot:%d\n",afn1.tailleD,nouvelleTailleD );
+	for(i=afn1.tailleD;i<nouvelleTailleD;i++){
+
+		//on sépare la chaine de transition en 3
+		char *ptr = strtok(afn2.D[i-afn1.tailleD], delim);
+		j=0; //index des caracteres dans afn1.D[i][j]
+
+
+		for(k=0;k<NOMBRE_ELEMENT_TRANSITION;k++)
+		{
+			transitionTmp[k] = ptr;
+			
+			//traitement sur transitionTmp[k]
+			if(k==1) //on ne modifie pas le caractere
+			{
+				afn1.D[i][j] = transitionTmp[k][0];
+				j++;
+
+			}else{ // traitement des etats
+				//on ne change pas si c'est l'etat initial
+
+				if(!strcmp(transitionTmp[k],"0")){ 
+					afn1.D[i][j] = '0';
+					j++;
+				}else{ //traitement des autres etats
+					//on passe le char en int
+					sscanf(transitionTmp[k], "%d", &etat); 
+					//on incremente avec le nombre d'etat de afn1
+					etat = etat + afn1.tailleQ - 1;
+
+					//on le remet en string (char*)
+					sprintf(transitionTmp[k], "%d", etat);
+
+					//on ajoute les char de l'etat dans la chaine de transition
+					y=0; //index de la tranisition k
+					while(transitionTmp[k][y]!='\0'){
+						afn1.D[i][j] = transitionTmp[k][y];
+						j++;
+						y++;
+					}
+   					
+				}
+
+			}
+			if(k!=2){
+				//on ajoute l'element separateur si on est pas sur l'etat darrivee
+				afn1.D[i][j] = '/';
+				j++;
+			}
+			
+
+
+			//on passe a la partie suivante de la transition
+			ptr = strtok(NULL, delim);
+		}
+		afn1.D[i][j] = '\0';
+			
+	}
+
+
+	//enregistre les nouvelle taille de Q, F et D
+	afn1.tailleF = nouvelleTailleF;
 	afn1.tailleQ = nouvelleTailleQ;
+	afn1.tailleD = nouvelleTailleD;
+
 
 	return afn1;
 }

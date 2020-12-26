@@ -27,7 +27,7 @@ typedef struct
    } AUTOMATEAFD;
 
 /* Macro */
-#define TAILLE_CHAINE_TRANSITION 4
+#define NOMBRE_ELEMENT_TRANSITION 3
 
 /* Prototypes */
 void AfficherAutomate(AUTOMATEAFN afn); //permet d'afficher le contenu d'un automate standard
