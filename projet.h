@@ -2,6 +2,7 @@
 #include <stdlib.h> //malloc
 #include <string.h> //strcmp strlen
 #include <regex.h> //expression regulière
+#include <ctype.h>
 
 /* STRUCTURES */
 // Automate Fini Non Deterministe
