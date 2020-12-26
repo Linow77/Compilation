@@ -3,7 +3,7 @@
 
 int main() {
 
-	AUTOMATEAFN afnVide,afnMotVide,afncaractere1,afncaractere2, afnUnion;
+	AUTOMATEAFN afnVide,afnMotVide,afncaractere1,afncaractere2, afnUnion, afnConcatene;
 
 	afnVide = langageVide();
 	printf("/**** Langage Vide ****/\n");
@@ -22,9 +22,10 @@ int main() {
 	AfficherAutomate(afncaractere2);
 
 	afnUnion = unionDeDeuxAutomates(afncaractere1, afncaractere2);
-
 	printf("\n/**** Langage Union ****/\n");
 	AfficherAutomate(afnUnion);
+
+	afnConcatene = concatenationDeDeuxAutomates(afncaractere1,afncaractere2);
 	return 1;
 
 }
@@ -317,7 +318,6 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 
 			}else{ // traitement des etats
 				//on ne change pas si c'est l'etat initial
-
 				if(!strcmp(transitionTmp[k],"0")){ 
 					afn1.D[i][j] = '0';
 					j++;
@@ -366,6 +366,9 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	return afn1;
 }
 
+
+/** Fonctions annexe **/
+//Les afn sont-ils identiques ?
 int afn_identique(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	int i;
 
@@ -407,5 +410,164 @@ int afn_identique(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	}
 	
 	return 1; //si tout est identique
+}
+
+//Extraction de mot
+int extract(int from, int to, char *chaine, char *sousChaine)
+{
+  int i=0, j=0;
+  //récupérer la longueur de la chaîne
+  int length = strlen(chaine);
+
+  if( from > length || from < 0 ){
+    printf("L'index 'from' est invalide\n");
+    return 1;
+  }
+  if( to > length ){
+    printf("L'index 'to' est invalide\n");
+    return 1;
+  }
+  for( i = from, j = 0; i <= to; i++, j++){
+    sousChaine[j] = chaine[i];
+  }
+  return 0;
+}
+
+AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
+{
+	AUTOMATEAFN automateConcatene; 
+	int i,j,verifCaractere;
+
+	//Q
+	printf("Q\n" );
+		automateConcatene.tailleQ = afn1.tailleQ + afn2.tailleQ - 1; //On retire l'etat initial de afn2
+
+	//allocation de Q
+	automateConcatene.Q = (unsigned int *) malloc(automateConcatene.tailleQ * sizeof(unsigned int));
+
+	//ajout des états de afn2 dans afn1.Q
+	for(i=0; i<afn2.tailleQ; i++){ //on ne récupère pas l'état initial de afn2
+		if(afn2.Q[i]!=0){
+			automateConcatene.Q[afn1.tailleQ-1+i] = afn2.Q[i];//+afn1.tailleQ-1; //on démarre le compte des etats de afn2 après ceux de afn1
+		}
+		
+	}
+
+	//Z
+	printf("Z\n" );
+	//Allocation de Ztemp au maximum (afn1.Z + afn2.Z)
+	char* Ztemp = (char*)malloc(sizeof(char)*(strlen(afn1.Z)+strlen(afn2.Z)));
+	strcpy(Ztemp,afn1.Z); //copie de afn1.Z dans Ztemp
+
+	//Determinisation des nouveaux caracteres
+	for(i=0;i<strlen(afn2.Z);i++){		//Pour chaque caractere de afn2
+		verifCaractere=0; //on a pas trouvé le caractère
+		for(j=0;j<strlen(afn1.Z);j++){	//Est il deja present dans afn1
+			if(!verifCaractere){ //si on a trouvé le caractère pas besoin de continuer de le chercher
+				//printf("afn1:%d et afn2:%d\n",j,i );
+				if(afn2.Z[i]==afn1.Z[j]){ 	//Si oui on passe au prochain caractere de afn2
+					//printf("meme caractere :%c et %c\n",afn2.Z[i],afn1.Z[j] );
+					verifCaractere=1;
+				}
+			}
+		}
+
+		if(!verifCaractere){ //si on a pas trouvé le caractere dans tout l'aphabet de afn1 alors on l'ajoute
+				//printf("ajout de %c\n", afn2.Z[i]);
+				Ztemp[strlen(afn1.Z)] = afn2.Z[i];
+
+		}
+	}
+
+	//On modifie automateConcatene.Z par Ztemp
+	automateConcatene.Z = (char*)malloc(strlen(Ztemp)*sizeof(char));
+	strcpy(automateConcatene.Z,Ztemp);
+
+
+	//S
+	printf("S\n" );
+	//l'etat initial est le meme que celui du 1er automate
+	automateConcatene.s = afn1.s;
+
+	//F
+	printf("F\n" );
+	unsigned int k=1;
+	//On regarde si l'etat initial de afn2 est accepteur
+	if(afn2.F[0]==0)
+	{
+		//dans ce cas là les etats finaux de afn1 le sont aussi
+		automateConcatene.tailleF = afn1.tailleF + afn2.tailleF-1;
+		//On remplit F
+		for(i=0; i<automateConcatene.tailleF; i++)
+		{
+			if(i<afn1.tailleF)
+			{
+				automateConcatene.F[i] = afn1.F[i];//on remplit avec les etats finaux
+			}
+			else 
+			{
+				automateConcatene.F[i] = afn2.F[k];
+				k++;
+			}
+		}
 	
+	}else // sinon seuls les etats finaux de afn2 sont finaux
+	{
+		automateConcatene.tailleF = afn2.tailleF;
+		//On remplit F
+		automateConcatene.F = afn2.F;
+	}
+	
+	
+	//D
+	/*printf("D\n" );
+	char* Dtemp = (char*)malloc(sizeof(char)*(strlen(afn1.D)+strlen(afn2.D)));
+	unsigned int indiceD= afn1.tailleD;
+
+	//Variables pour la gestion des expressions régulières
+	int err;
+	regex_t preg;
+	const char *str_regex = "0[a-z0-9][0-9]+";
+
+	//Variable pour stocker une sous-chaine
+	char * etatDeDepart;
+	char * carac;
+	char * etatArrive;
+
+	//On mets toutes les transitions de afn1 dans Dtemp
+	strcpy(Dtemp,afn1.D);
+
+	//Ajouter les transitions des états finaux de afn1 vers des etats que l'on peux obtenir à partir de s2
+	for(i=0; i< afn1.tailleF; i++)
+	{
+		for(j=0; j< afn2.tailleD; j++)
+			{
+				err = regcomp (&preg, str_regex, REG_NOSUB | REG_EXTENDED);
+				if (err == 0)
+				{
+					int match;
+
+					//on teste si afn2.D[i] correspond à l'espression régulière 
+					match = regexec (&preg, afn2.D[j], 0, NULL, 0);
+					//on free preg
+					regfree (&preg);
+
+					//si l'espression regulière match afn2.D[i]
+					if (match == 0) //si j'ai une transistion de s2 vers un autre etat
+					{
+						//On récupère les information de la nouvelle transition
+						extract(2, 2, afn1.D[i], etatDeDepart);
+						extract(1, 1, afn2.D[j] ,carac);
+						extract(2, 2, afn2.D[j] ,etatArrive);
+						Dtemp[indiceD]=etatDeDepart+carac+etatArrive;
+						indiceD+=1;
+					}
+			}	}
+	}
+	//Supprimer les transitions partant de s2 dans afn2
+
+	//On modifie automateConcatene.Z par Ztemp
+	automateConcatene.D = (char*)malloc(strlen(Dtemp)*sizeof(char));
+	strcpy(automateConcatene.D,Dtemp);*/
+	return automateConcatene;
 }

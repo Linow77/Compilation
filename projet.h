@@ -1,6 +1,7 @@
 #include <stdio.h> //printf
 #include <stdlib.h> //malloc
 #include <string.h> //strcmp strlen
+#include <regex.h> //expression regulière
 
 /* STRUCTURES */
 // Automate Fini Non Deterministe
@@ -36,3 +37,5 @@ AUTOMATEAFN langageMotVide(); //renvoie un automate standard reconnaissant le la
 AUTOMATEAFN langagecaractere(char caractere);
 AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2);
 int afn_identique(AUTOMATEAFN afn1, AUTOMATEAFN anf2);
+int extract(int from, int to, char *chaine, char *sousChaine); //permet d'extraire une sous-chaine de caractère
+AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2);
