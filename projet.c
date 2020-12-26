@@ -459,9 +459,13 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
 	automateConcatene.Q = (unsigned int *) malloc(automateConcatene.tailleQ * sizeof(unsigned int));
 
 	//ajout des états de afn2 dans afn1.Q
-	for(i=0; i<automateConcatene.tailleQ; i++){ //on ne récupère pas l'état initial de afn2
-		if(afn2.Q[i]!=0){
-			automateConcatene.Q[afn1.tailleQ-1+i] = afn2.Q[i]+afn1.tailleQ-1; ;//+afn1.tailleQ-1; //on démarre le compte des etats de afn2 après ceux de afn1
+	for(i=0; i<afn2.tailleQ; i++){ 
+		if(i<afn1.tailleQ) //on mets tous les etats de afn1
+		{
+			automateConcatene.Q[i] = afn1.Q[i];
+		}
+		if(afn2.Q[i]!=0){	//on ne récupère pas l'état initial de afn2
+			automateConcatene.Q[afn1.tailleQ-1+i] = afn2.Q[i] +afn1.tailleQ-1; ; 
 		}
 		
 	}
@@ -502,19 +506,11 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
 
 	//F
 	unsigned int k=1;
-	unsigned int etatInitialAccepteur=0;
-
 	//On regarde si l'etat initial de afn2 est accepteur
-	for(i = 0; i<afn2.tailleF; i++)
-	{
-		if(afn2.F[i] == 0)
-			etatInitialAccepteur = 1;
-	}
-
-	if(etatInitialAccepteur==1)
+	if(afn2.F[0]==0)
 	{
 		//dans ce cas là les etats finaux de afn1 le sont aussi
-		automateConcatene.tailleF = afn1.tailleF + afn2.tailleF-1; //-1 car on enleve l'etat initial de afn2
+		automateConcatene.tailleF = afn1.tailleF + afn2.tailleF-1;
 		//On remplit F
 		for(i=0; i<automateConcatene.tailleF; i++)
 		{
@@ -536,8 +532,8 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
 		automateConcatene.F = afn2.F;
 	}
 	
+	
 	//D
-
 	//Taille de D = D1 + etats finaux afn1 * etats qui ont une transitions depuis s2 + reste transition afn2
 
 	unsigned int cmpS2 = 0;//nbre d'etat qui partent de s2
@@ -572,7 +568,6 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
 		{
 			automateConcatene.D[i] = (char*) malloc(sizeof(char));
 		}
-
 		//remplissage de D
 		for(i=0;i<automateConcatene.tailleD;i+=0)
 		{
@@ -702,6 +697,5 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
 			}
 			
 		}
-
 	return automateConcatene;
 }
