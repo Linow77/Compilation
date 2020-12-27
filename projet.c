@@ -21,13 +21,13 @@ int main() {
 	printf("\n/**** Langage Caractere ****/\n");
 	AfficherAutomate(afncaractere2);
 
-	//afnUnion = unionDeDeuxAutomates(afncaractere1, afncaractere2);
-	//printf("\n/**** Langage Union ****/\n");
-	//AfficherAutomate(afnUnion);
-
 	afnConcatene = concatenationDeDeuxAutomates(afncaractere1,afncaractere2);
 	printf("\n/**** Langage Concatené ****/\n");
 	AfficherAutomate(afnConcatene);
+
+	afnUnion = unionDeDeuxAutomates(afncaractere1, afncaractere2);
+	printf("\n/**** Langage Union ****/\n");
+	AfficherAutomate(afnUnion);
 
 	return 1;
 
@@ -71,7 +71,7 @@ void AfficherAutomate(AUTOMATEAFN afn){
 	if(afn.F!=NULL){
 		printf("Ensemble d'etats accepteurs (F): ");
 		for(i=0;i<afn.tailleF;i++){
-			printf("%d, ",afn.F[i]);
+			printf(" %d, ",afn.F[i]);
 		}
 		printf("\n");
 	}else{
@@ -149,8 +149,8 @@ AUTOMATEAFN langagecaractere(char caractere){
 
 	afn.tailleF = 2;
 	afn.F = (int*)malloc(sizeof(int)*afn.tailleF);
-	afn.F[0] = 1;
-	//afn.F[2] = 0;//temporaire pour les tests
+	afn.F[0] = 2;
+	afn.F[1] = 0;//temporaire pour les tests
 
 	afn.D = (char**)malloc(sizeof(char*));
 	afn.D[0] = (char*)malloc(sizeof(char)); // allouer que la taille d'un char ?
@@ -465,7 +465,7 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
 			automateConcatene.Q[i] = afn1.Q[i];
 		}
 		if(afn2.Q[i]!=0){	//on ne récupère pas l'état initial de afn2
-			automateConcatene.Q[afn1.tailleQ-1+i] = afn2.Q[i] +afn1.tailleQ-1; ; 
+			automateConcatene.Q[afn1.tailleQ-1+i] = afn2.Q[i] +afn1.tailleQ-1; 
 		}
 		
 	}
@@ -505,12 +505,21 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
 	automateConcatene.s = afn1.s;
 
 	//F
-	unsigned int k=1;
+	unsigned int k=0;
+	unsigned int etat0Accept = 0;
+
 	//On regarde si l'etat initial de afn2 est accepteur
-	if(afn2.F[0]==0)
+	for( i=0; i<afn2.tailleF; i++)
+	{
+		if(afn2.F[i]==0)
+			etat0Accept = 1;
+	}
+
+	if(etat0Accept == 1)
 	{
 		//dans ce cas là les etats finaux de afn1 le sont aussi
-		automateConcatene.tailleF = afn1.tailleF + afn2.tailleF-1;
+		automateConcatene.tailleF = afn1.tailleF + afn2.tailleF-1; //taille= etats finaux de afn1 + etats finaux de afn2 sauf l'etat 0
+		automateConcatene.F = (int*) malloc(automateConcatene.tailleF *sizeof(int));
 		//On remplit F
 		for(i=0; i<automateConcatene.tailleF; i++)
 		{
@@ -520,18 +529,22 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
 			}
 			else 
 			{
-				automateConcatene.F[i] = afn2.F[k];
+				if(afn2.F[k]!= 0)// si ce n'est pas l'etat 0 de afn2 alors on met l'etat
+				{
+					automateConcatene.F[i] = afn2.F[k] + afn1.tailleF;
+				}
 				k++;
+
 			}
 		}
 	
 	}else // sinon seuls les etats finaux de afn2 sont finaux
 	{
 		automateConcatene.tailleF = afn2.tailleF;
+		automateConcatene.F = (int*) malloc(automateConcatene.tailleF *sizeof(int));
 		//On remplit F
 		automateConcatene.F = afn2.F;
 	}
-	
 	
 	//D
 	//Taille de D = D1 + etats finaux afn1 * etats qui ont une transitions depuis s2 + reste transition afn2
@@ -697,5 +710,7 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
 			}
 			
 		}
+
+
 	return automateConcatene;
 }
