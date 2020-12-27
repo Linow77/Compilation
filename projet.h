@@ -38,9 +38,11 @@ AUTOMATEAFN langagecaractere(char caractere); //renvoi un automate standard reco
 /**AUTOMATE FINI NON DETERMINISTES PLUS EVOLUES **/
 AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2);//renvoie un automate standard faisant l'union de deux automates
 AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2);//renvoie un automate standard faisant la concatenation de deux automates
+AUTOMATEAFN kleene(AUTOMATEAFN afn);//renvoie la version de kleene de l'automate passé en paramètre
 
 
 /** Fonctions annexe **/
 void AfficherAutomate(AUTOMATEAFN afn); //permet d'afficher le contenu d'un automate standard
 int afn_identique(AUTOMATEAFN afn1, AUTOMATEAFN anf2); //permet de verifier si deux automates sont identiques
+void free_afn(AUTOMATEAFN afn); //Libère les tableaux d'un AUTOMATEAFN
 

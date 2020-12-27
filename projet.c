@@ -2,7 +2,7 @@
 
 int main() {
 
-	AUTOMATEAFN afnVide,afnMotVide,afncaractere1,afncaractere2, afnUnion, afnConcatene;
+	AUTOMATEAFN afnVide,afnMotVide,afncaractere1,afncaractere2, afnUnion, afnConcatene,afnKleene;
 
 	afnVide = langageVide();
 	printf("/**** Langage Vide ****/\n");
@@ -20,15 +20,27 @@ int main() {
 	printf("\n/**** Langage Caractere ****/\n");
 	AfficherAutomate(afncaractere2);
 
+	afnKleene = kleene(afncaractere1);
+	printf("\n/**** Version Kleene sur langagecaractere1 ****/\n");
+	AfficherAutomate(afnKleene);
+
 	afnUnion = unionDeDeuxAutomates(afncaractere1, afncaractere2);
 	printf("\n/**** Langage Union ****/\n");
 	AfficherAutomate(afnUnion);
 
 	afnConcatene = concatenationDeDeuxAutomates(afnUnion,afnUnion);
 	printf("\n/**** Langage Concatené ****/\n");
-	AfficherAutomate(afnConcatene);	
+	AfficherAutomate(afnConcatene);
+	
 
 	//free des afn
+	free_afn(afnVide);
+	free_afn(afnMotVide);
+	free_afn(afncaractere1);
+	free_afn(afncaractere2);
+	free_afn(afnUnion);
+	free_afn(afnConcatene);
+	free_afn(afnKleene);
 
 	return 1;
 
@@ -92,7 +104,7 @@ AUTOMATEAFN langagecaractere(char caractere){
 	afn.tailleF = 2;
 	afn.F = (int*)malloc(sizeof(int)*afn.tailleF);
 	afn.F[0] = 2;
-	afn.F[1] = 0;//temporaire pour les tests
+	afn.F[1] = 1;//temporaire pour les tests
 
 	afn.D = (char**)malloc(sizeof(char*));
 	afn.D[0] = (char*)malloc(sizeof(char)); // allouer que la taille d'un char ?
@@ -418,7 +430,11 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
 		automateConcatene.tailleF = afn2.tailleF;
 		automateConcatene.F = (int*) malloc(automateConcatene.tailleF *sizeof(int));
 		//On remplit F
-		automateConcatene.F = afn2.F;
+		for(i=0;i<automateConcatene.tailleF;i++)
+		{
+			automateConcatene.F[i] = afn2.F[i];
+		}
+		
 	}
 	
 	//D
@@ -590,6 +606,166 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
 	return automateConcatene;
 }
 
+AUTOMATEAFN kleene(AUTOMATEAFN afn)//Mise a l'etoile
+{
+	AUTOMATEAFN automateKleene;
+	unsigned int i,k,j,y,z,verif_s =0;
+	char delim[] = "/";
+
+	//Q
+	//allocation de Q
+	automateKleene.Q = (unsigned int *) malloc(afn.tailleQ * sizeof(unsigned int));
+	automateKleene.tailleQ = afn.tailleQ;
+
+	for(i=0; i< automateKleene.tailleQ;i++)
+	{
+		automateKleene.Q[i] = afn.Q[i];
+	}
+
+	//Z
+	automateKleene.Z = (char*)malloc(strlen(afn.Z)*sizeof(char));
+	strcpy(automateKleene.Z,afn.Z);
+
+	//S
+	automateKleene.s = afn.s;
+
+	//F
+	//On vérifie si l'etat initial est déjà accepteur 
+	for(i=0; i< afn.tailleF;i++)
+	{
+		if(afn.F[i]==0) //si il est deja accepteur
+		{
+			verif_s =1;
+		}
+	}
+	if( verif_s == 1)//on ne doit pas changer tailleF ni F
+		{
+			automateKleene.tailleF = afn.tailleF;
+			automateKleene.F = (int*) malloc(automateKleene.tailleF *sizeof(int));
+			for(i=0; i< automateKleene.tailleF;i++)
+			{
+				automateKleene.F[i] = afn.F[i];
+			}
+		}
+		else//sinon on augùente la taille de 1 pour qu'elle prenne l'etat initial
+		{
+			automateKleene.tailleF = afn.tailleF+1;
+			automateKleene.F = (int*) malloc(automateKleene.tailleF *sizeof(int));
+
+			//On remplit le tab F en rajoutant l'etat 0
+			automateKleene.F[0] = 0;
+			for(i=1; i< automateKleene.tailleF;i++)
+			{
+				automateKleene.F[i] = afn.F[i-1];
+			}
+		}
+
+		//D
+
+		//Calcul de la taille de D
+		unsigned int cmpS2 = 0;//nbre d'etat qui partent de s2
+		char* tmp=(char *) malloc(10);
+
+
+		for(i=0; i< afn.tailleD; i++)
+			{	
+				strcpy(tmp,afn.D[i]);
+
+				if(strcmp(strtok(tmp, delim),"0") == 0) //si on trouve une transition qui part de s2
+					{
+						//printf("%s\n",tmp);
+						cmpS2++; //nbre etats qui sortent de s2
+					}
+				
+			}
+
+			if(verif_s==1)
+			{
+					automateKleene.tailleD = afn.tailleD + ((afn.tailleF-1)*cmpS2);
+			}
+			else{
+					automateKleene.tailleD = afn.tailleD + (afn.tailleF*cmpS2);
+			}
+
+			//Allocation de D
+			automateKleene.D =(char **) malloc(sizeof(char*)*automateKleene.tailleD); //remplit tab d'etat que je peux avoir depuis s2
+			for(i=0;i<automateKleene.tailleD;i++)
+			{
+				automateKleene.D[i] = (char*) malloc(sizeof(char));
+			}
+
+			//remplissage de D
+			for(i=0;i<automateKleene.tailleD;i+=0)
+		{
+			if(i<afn.tailleD) //on met d'abord toutes les transitions de afn
+			{
+				automateKleene.D[i] = afn.D[i];
+				i++;
+			}
+			else //on rajoute les nvelles transitions
+			{
+		
+				for(k=0;k<afn.tailleD;k++)  //on parcours les transitions de afn2
+				{
+						
+					if(afn.D[k][0] == '0')//si on trouve une transition qui commence par s2
+					{
+						for(j=0;j<afn.tailleF;j++)  //pour tous les etats accepteurs de afn
+						{
+							if(afn.F[j]!=0)
+							{
+
+								//on le remet en string (char*)
+								sprintf(tmp, "%d",afn.F[j]);
+								y =0;
+
+								while(tmp[y] != '\0')
+								{
+									automateKleene.D[i][y]= tmp[y];
+									y++;
+								}
+								
+								automateKleene.D[i][y] = '/';
+								y++;
+
+								//on sépare la chaine de transition en 3
+								strcpy(tmp,afn.D[k]);
+								char* ptr = strtok(tmp, delim);
+								ptr = strtok(NULL, delim); //pour avoir le caractere 
+
+								automateKleene.D[i][y] = ptr[0];
+								y++;
+
+								automateKleene.D[i][y] = '/';
+								y++;
+
+								ptr = strtok(NULL, delim); //pour avoir l'etat 
+
+								z=0;//curseur de la chaine sur l'etat d'arrivee
+
+								//on ajoute les char de l'etat dans la chaine de transition
+								while(ptr[z]!='\0'){
+									automateKleene.D[i][y] = ptr[z];
+									z++;
+									y++;
+								}
+
+								automateKleene.D[i][y] = '\0';
+								i++;
+							}
+						}
+					}
+					
+					
+				}
+				
+			}
+			
+		}
+
+			return automateKleene;
+}
+
 /** Fonctions annexe **/
 //Afficher les automates
 void AfficherAutomate(AUTOMATEAFN afn){
@@ -695,4 +871,25 @@ int afn_identique(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	return 1; //si tout est identique
 }
 
+void free_afn(AUTOMATEAFN afn)
+{
+	unsigned int i;
 
+	//Q
+	free(afn.Q);
+
+	//Z
+	//free(afn.Z);
+
+	//F
+	free(afn.F);
+
+	//D
+	/*for(i=0;i<afn.tailleD;i++)
+	{
+
+		free(afn.D[i]);
+	}
+
+	free(afn.D);*/
+}
