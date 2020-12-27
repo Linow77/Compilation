@@ -1,8 +1,6 @@
 #include <stdio.h> //printf
 #include <stdlib.h> //malloc
 #include <string.h> //strcmp strlen
-#include <regex.h> //expression regulière
-#include <ctype.h>
 
 /* STRUCTURES */
 // Automate Fini Non Deterministe
@@ -15,7 +13,7 @@ typedef struct
    	int * F;				//F : ensemble d'etats accepteurs
       int tailleF;
    	char ** D;	
-      int tailleD;			//D : ensemble des transitions 1 tableau 1D, chaque case reprÃ©sente : etat1/lettre/etat2
+      int tailleD;			//D : ensemble des transitions 1 tableau 1D, chaque case represente : etat1/lettre/etat2
    } AUTOMATEAFN;
 
 // Automate Fini Deterministe a revoir
@@ -25,18 +23,24 @@ typedef struct
    	char * Z;				//Z : Alphabet de l'automate
    	unsigned int s;			//s : etat initial
    	int * F;				//F : ensemble d'etats accepteurs
-   	char ** S;				//S : ensemble des transitions 1 tableau 1D, chaque case reprÃ©sente : etat1/lettre/etat2
+   	char ** S;				//S : ensemble des transitions 1 tableau 1D, chaque case represente : etat1/lettre/etat2
    } AUTOMATEAFD;
 
 /* Macro */
 #define NOMBRE_ELEMENT_TRANSITION 3
 
 /* Prototypes */
-void AfficherAutomate(AUTOMATEAFN afn); //permet d'afficher le contenu d'un automate standard
+/**AUTOMATE FINI NON DETERMINISTES **/
 AUTOMATEAFN langageVide(); //renvoie un automate standard reconnaissant le langage vide
-AUTOMATEAFN langageMotVide(); //renvoie un automate standard reconnaissant le langage composÃ© du seul mot vide
-AUTOMATEAFN langagecaractere(char caractere);
-AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2);
-int afn_identique(AUTOMATEAFN afn1, AUTOMATEAFN anf2);
-int extract(int from, int to, char *chaine, char *sousChaine); //permet d'extraire une sous-chaine de caractère
-AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2);
+AUTOMATEAFN langageMotVide(); //renvoie un automate standard reconnaissant le langage composant du seul mot vide
+AUTOMATEAFN langagecaractere(char caractere); //renvoi un automate standard reconnaissant le langage du caractere donne en entree
+
+/**AUTOMATE FINI NON DETERMINISTES PLUS EVOLUES **/
+AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2);//renvoie un automate standard faisant l'union de deux automates
+AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2);//renvoie un automate standard faisant la concatenation de deux automates
+
+
+/** Fonctions annexe **/
+void AfficherAutomate(AUTOMATEAFN afn); //permet d'afficher le contenu d'un automate standard
+int afn_identique(AUTOMATEAFN afn1, AUTOMATEAFN anf2); //permet de verifier si deux automates sont identiques
+

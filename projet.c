@@ -1,6 +1,5 @@
 #include "projet.h"
 
-
 int main() {
 
 	AUTOMATEAFN afnVide,afnMotVide,afncaractere1,afncaractere2, afnUnion, afnConcatene;
@@ -21,75 +20,18 @@ int main() {
 	printf("\n/**** Langage Caractere ****/\n");
 	AfficherAutomate(afncaractere2);
 
-	afnConcatene = concatenationDeDeuxAutomates(afncaractere1,afncaractere2);
-	printf("\n/**** Langage Concatené ****/\n");
-	AfficherAutomate(afnConcatene);
-
 	afnUnion = unionDeDeuxAutomates(afncaractere1, afncaractere2);
 	printf("\n/**** Langage Union ****/\n");
 	AfficherAutomate(afnUnion);
 
+	afnConcatene = concatenationDeDeuxAutomates(afnUnion,afnUnion);
+	printf("\n/**** Langage Concatené ****/\n");
+	AfficherAutomate(afnConcatene);	
+
+	//free des afn
+
 	return 1;
 
-}
-
-void AfficherAutomate(AUTOMATEAFN afn){
-	int i=0;
-	int tailleZ;
-
-	//Q
-	//printf("taille de Q: %d\n",tailleQ);
-	if(afn.Q!=NULL){
-		printf("Ensemble d'etats (Q): ");
-		for(i=0;i<afn.tailleQ;i++){
-			printf("%u, ",afn.Q[i]);
-		}	
-		printf("\n");
-	}
-
-	//Z
-
-	if(afn.Z == NULL){
-		printf("Alphabet de l'automate (Z): vide\n");
-	} else if(!strcmp(afn.Z,"")){
-		printf("Alphabet de l'automate (Z): mot vide\n");
-	}else{
-		tailleZ = strlen(afn.Z);
-		printf("Alphabet de l'automate (Z): ");
-		for(i=0;i<tailleZ;i++){
-			printf("%c, ",afn.Z[i]);
-		}
-		printf("\n");
-	}
-	
-
-	//s
-	printf("Etat initial (s): %u\n",afn.s);
-
-	//F
-	//printf("taille de F: %d\n",tailleF);
-	if(afn.F!=NULL){
-		printf("Ensemble d'etats accepteurs (F): ");
-		for(i=0;i<afn.tailleF;i++){
-			printf(" %d, ",afn.F[i]);
-		}
-		printf("\n");
-	}else{
-		printf("Aucun etat accepteur\n");
-	}
-
-	//D
-	//printf("taille de D: %d\n",tailleD);
-	if(afn.D!=NULL){
-		printf("Ensemble des etats transitions (D): ");
-
-		for(i=0;i<afn.tailleD;i++){
-			printf("%s, ",afn.D[i]);
-		}
-		printf("\n");	
-	}else{
-		printf("Aucune transition\n");
-	}
 }
 
 /**AUTOMATE FINI NON DETERMINISTES **/
@@ -380,73 +322,6 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	return afn1;
 }
 
-
-/** Fonctions annexe **/
-//Les afn sont-ils identiques ?
-int afn_identique(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
-	int i;
-
-	//Verif de la taille de Q, Z, F,D et la valeur de s
-	if(afn1.tailleQ != afn2.tailleQ || 
-		strlen(afn1.Z)!=strlen(afn2.Z) ||
-		afn1.s != afn2.s ||
-		afn1.tailleF != afn2.tailleF ||
-		afn1.tailleD != afn2.tailleD){
-		return 0;
-	}
-
-	//Verif du contenu de Q
-	for (i=0;i<afn1.tailleQ;i++){
-		if (afn1.Q[i]!=afn2.Q[i]){
-			return 0;
-		}
-	}
-
-	//Verif du contenu de Z
-	for (i=0;i<strlen(afn1.Z);i++){
-		if(afn1.Z[i]!=afn2.Z[i]){
-			return 0;
-		}
-	}
-
-	//Verif du contenu de F
-	for (i=0;i<afn1.tailleF;i++){
-		if(afn1.Z[i]!=afn2.Z[i]){
-			return 0;
-		}
-	}
-
-	//Verif du contenu de D
-	for (i=0;i<afn1.tailleD;i++){
-		if(afn1.Z[i]!=afn2.Z[i]){
-			return 0;
-		}
-	}
-	
-	return 1; //si tout est identique
-}
-
-//Extraction de mot
-int extract(int from, int to, char *chaine, char *sousChaine)
-{
-  int i=0, j=0;
-  //récupérer la longueur de la chaîne
-  int length = strlen(chaine);
-
-  if( from > length || from < 0 ){
-    printf("L'index 'from' est invalide\n");
-    return 1;
-  }
-  if( to > length ){
-    printf("L'index 'to' est invalide\n");
-    return 1;
-  }
-  for( i = from, j = 0; i <= to; i++, j++){
-    sousChaine[j] = chaine[i];
-  }
-  return 0;
-}
-
 AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
 {
 	AUTOMATEAFN automateConcatene; 
@@ -714,3 +589,110 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
 
 	return automateConcatene;
 }
+
+/** Fonctions annexe **/
+//Afficher les automates
+void AfficherAutomate(AUTOMATEAFN afn){
+	int i=0;
+	int tailleZ;
+
+	//Q
+	//printf("taille de Q: %d\n",tailleQ);
+	if(afn.Q!=NULL){
+		printf("Ensemble d'etats (Q): ");
+		for(i=0;i<afn.tailleQ;i++){
+			printf("%u, ",afn.Q[i]);
+		}	
+		printf("\n");
+	}
+
+	//Z
+
+	if(afn.Z == NULL){
+		printf("Alphabet de l'automate (Z): vide\n");
+	} else if(!strcmp(afn.Z,"")){
+		printf("Alphabet de l'automate (Z): mot vide\n");
+	}else{
+		tailleZ = strlen(afn.Z);
+		printf("Alphabet de l'automate (Z): ");
+		for(i=0;i<tailleZ;i++){
+			printf("%c, ",afn.Z[i]);
+		}
+		printf("\n");
+	}
+	
+
+	//s
+	printf("Etat initial (s): %u\n",afn.s);
+
+	//F
+	//printf("taille de F: %d\n",tailleF);
+	if(afn.F!=NULL){
+		printf("Ensemble d'etats accepteurs (F): ");
+		for(i=0;i<afn.tailleF;i++){
+			printf(" %d, ",afn.F[i]);
+		}
+		printf("\n");
+	}else{
+		printf("Aucun etat accepteur\n");
+	}
+
+	//D
+	//printf("taille de D: %d\n",tailleD);
+	if(afn.D!=NULL){
+		printf("Ensemble des etats transitions (D): ");
+
+		for(i=0;i<afn.tailleD;i++){
+			printf("%s, ",afn.D[i]);
+		}
+		printf("\n");	
+	}else{
+		printf("Aucune transition\n");
+	}
+}
+
+//Les afn sont-ils identiques ?
+int afn_identique(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
+	int i;
+
+	//Verif de la taille de Q, Z, F,D et la valeur de s
+	if(afn1.tailleQ != afn2.tailleQ || 
+		strlen(afn1.Z)!=strlen(afn2.Z) ||
+		afn1.s != afn2.s ||
+		afn1.tailleF != afn2.tailleF ||
+		afn1.tailleD != afn2.tailleD){
+		return 0;
+	}
+
+	//Verif du contenu de Q
+	for (i=0;i<afn1.tailleQ;i++){
+		if (afn1.Q[i]!=afn2.Q[i]){
+			return 0;
+		}
+	}
+
+	//Verif du contenu de Z
+	for (i=0;i<strlen(afn1.Z);i++){
+		if(afn1.Z[i]!=afn2.Z[i]){
+			return 0;
+		}
+	}
+
+	//Verif du contenu de F
+	for (i=0;i<afn1.tailleF;i++){
+		if(afn1.Z[i]!=afn2.Z[i]){
+			return 0;
+		}
+	}
+
+	//Verif du contenu de D
+	for (i=0;i<afn1.tailleD;i++){
+		if(afn1.Z[i]!=afn2.Z[i]){
+			return 0;
+		}
+	}
+	
+	return 1; //si tout est identique
+}
+
+
