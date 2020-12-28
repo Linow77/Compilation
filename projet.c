@@ -3,34 +3,40 @@
 int main() {
 
 	AUTOMATEAFN afnVide,afnMotVide,afncaractere1,afncaractere2, afnUnion, afnConcatene,afnKleene;
+	AUTOMATEAFD afd;
 
 	afnVide = langageVide();
 	printf("/**** Langage Vide ****/\n");
-	AfficherAutomate(afnVide);
+	AfficherAutomateNonDeterministe(afnVide);
 
 	afnMotVide = langageMotVide();
 	printf("\n/**** Langage Mot Vide ****/\n");
-	AfficherAutomate(afnMotVide);
+	AfficherAutomateNonDeterministe(afnMotVide);
 
 	afncaractere1 = langagecaractere('a');
 	printf("\n/**** Langage Caractere ****/\n");
-	AfficherAutomate(afncaractere1);
+	AfficherAutomateNonDeterministe(afncaractere1);
 
 	afncaractere2 = langagecaractere('b');
 	printf("\n/**** Langage Caractere ****/\n");
-	AfficherAutomate(afncaractere2);
+	AfficherAutomateNonDeterministe(afncaractere2);
 
 	afnKleene = kleene(afncaractere1);
 	printf("\n/**** Version Kleene sur langagecaractere1 ****/\n");
-	AfficherAutomate(afnKleene);
+	AfficherAutomateNonDeterministe(afnKleene);
 
 	afnUnion = unionDeDeuxAutomates(afncaractere1,afncaractere2);
 	printf("\n/**** Langage Union ****/\n");
-	AfficherAutomate(afnUnion);
+	AfficherAutomateNonDeterministe(afnUnion);
 
 	afnConcatene = concatenationDeDeuxAutomates(afncaractere1,afncaractere1);
 	printf("\n/**** Langage Concatené ****/\n");
-	AfficherAutomate(afnConcatene);
+	AfficherAutomateNonDeterministe(afnConcatene);
+
+	afd = determinisation(afnConcatene);
+	printf("\n/**** AFD Concatené ****/\n");
+	//AfficherAutomateDeterministe(afd);
+	
 
 	//free des afn
 	free_afn(afnVide);
@@ -767,9 +773,20 @@ AUTOMATEAFN kleene(AUTOMATEAFN afn)//Mise a l'etoile
 			return automateKleene;
 }
 
+/**AUTOMATE FINI DETERMINISTES **/
+AUTOMATEAFD determinisation(AUTOMATEAFN afn){
+	AUTOMATEAFD afd; //automate que l'on retourne
+
+
+
+
+
+	return afd;
+}
+
 /** Fonctions annexe **/
-//Afficher les automates
-void AfficherAutomate(AUTOMATEAFN afn){
+//Afficher un automate standard non deterministe
+void AfficherAutomateNonDeterministe(AUTOMATEAFN afn){
 	int i=0;
 	int tailleZ;
 
@@ -899,8 +916,7 @@ void free_afn(AUTOMATEAFN afn)
 			free(afn.D[i]);
 		}
 		free(afn.D);
-	}
-	
+	}	
 }
 
 //Copie d'un automate
@@ -940,4 +956,65 @@ AUTOMATEAFN copie(AUTOMATEAFN afn){
 	}
 
 	return afn_copie;
+}
+
+//Afficher un automate standard deterministe
+void AfficherAutomateDeterministe(AUTOMATEAFD afd){
+	int i=0;
+	int tailleZ;
+
+	//Q
+	//printf("taille de Q: %d\n",tailleQ);
+	if(afd.Q!=NULL){
+		printf("Ensemble d'etats (Q): ");
+		for(i=0;i<afd.tailleQ;i++){
+			printf("%u, ",afd.Q[i]);
+		}	
+		printf("\n");
+	}
+
+	//Z
+
+	if(afd.Z == NULL){
+		printf("Alphabet de l'automate (Z): vide\n");
+	} else if(!strcmp(afd.Z,"")){
+		printf("Alphabet de l'automate (Z): mot vide\n");
+	}else{
+		tailleZ = strlen(afd.Z);
+		printf("Alphabet de l'automate (Z): ");
+		for(i=0;i<tailleZ;i++){
+			printf("%c, ",afd.Z[i]);
+		}
+		printf("\n");
+	}
+	
+
+	//s
+	printf("Etat initial (s): %u\n",afd.s);
+
+	//F
+	//printf("taille de F: %d\n",tailleF);
+	if(afd.F!=NULL){
+		printf("Ensemble d'etats accepteurs (F): ");
+		for(i=0;i<afd.tailleF;i++){
+			printf(" %d, ",afd.F[i]);
+		}
+		printf("\n");
+	}else{
+		printf("Aucun etat accepteur\n");
+	}
+
+	//D
+	//printf("taille de D: %d\n",tailleD);
+	if(afd.Delta!=NULL){
+		printf("Ensemble des etats transitions (D): ");
+
+		for(i=0;i<afd.tailleDelta;i++){
+
+			printf("%d%c%d ,",afd.Delta[i].depart,afd.Delta[i].caractere,afd.Delta[i].arrivee);
+		}
+		printf("\n");	
+	}else{
+		printf("Aucune transition\n");
+	}
 }

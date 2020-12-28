@@ -54,10 +54,13 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2);//renvoie u
 AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2);//renvoie un automate standard faisant la concatenation de deux automates
 AUTOMATEAFN kleene(AUTOMATEAFN afn);//renvoie la version de kleene de l'automate passé en paramètre
 
+/**AUTOMATE FINI DETERMINISTES **/
+AUTOMATEAFD determinisation(AUTOMATEAFN afn); //prend un automate fini non déterministe et renvoi un automate fini déterministe composé de ce dernier
 
 /** Fonctions annexe **/
-void AfficherAutomate(AUTOMATEAFN afn); //permet d'afficher le contenu d'un automate standard
+void AfficherAutomateNonDeterministe(AUTOMATEAFN afn); //permet d'afficher le contenu d'un automate standard non deterministe
 int afn_identique(AUTOMATEAFN afn1, AUTOMATEAFN anf2); //permet de verifier si deux automates sont identiques
 void free_afn(AUTOMATEAFN afn); //Libère les tableaux d'un AUTOMATEAFN
-AUTOMATEAFN copie(AUTOMATEAFN afn);
+AUTOMATEAFN copie(AUTOMATEAFN afn); // renvoie la copie d'un automate fini non deterministe
+void AfficherAutomateDeterministe(AUTOMATEAFD afn); //permet d'afficher le contenu d'un automate standard deterministe
 
