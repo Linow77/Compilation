@@ -94,6 +94,7 @@ AUTOMATEAFN langageMotVide(){
 
 AUTOMATEAFN langagecaractere(char caractere){
 	AUTOMATEAFN afn;
+
 	afn.tailleQ = 3;
 	afn.Q = (unsigned int*)malloc(sizeof(unsigned int)*afn.tailleQ);
 	afn.Q[0] = 0;
@@ -109,60 +110,32 @@ AUTOMATEAFN langagecaractere(char caractere){
 
 	afn.tailleF = 2;
 	afn.F = (int*)malloc(sizeof(int)*afn.tailleF);
-	afn.F[0] = 2;
-	afn.F[1] = 1;//temporaire pour les tests
-
-	afn.D = (char**)malloc(sizeof(char*));
-	afn.D[0] = (char*)malloc(sizeof(char)); // allouer que la taille d'un char ?
-	//creation de la chaine "etat1-caractere-etat2"
-	char * chaine =NULL;
-	chaine = (char*)malloc(sizeof(char)); //alouer que la taille d'un char ?
-	chaine[0] = '0';
-	chaine[1] = '/';
-	chaine[2] = caractere;
-	chaine[3] = '/';
-	chaine[4] = '1';
-	chaine[5] = '\0';
-	afn.D[0]=chaine;
-
-	//test
-	afn.D[1] = (char*)malloc(sizeof(char)); // allouer que la taille d'un char ?
-	//creation de la chaine "etat1-caractere-etat2"
-	char * chaine1 =NULL;
-	chaine1 = (char*)malloc(sizeof(char));
-	chaine1[0] = '1';
-	chaine1[1] = '/';
-	chaine1[2] = caractere;
-	chaine1[3] = '/';
-	chaine1[4] = '2';
-	chaine1[5] = '\0';
-	afn.D[1]=chaine1;
+	afn.F[0] = 1;
+	afn.F[1] = 2;//temporaire pour les tests
 
 	afn.tailleD = 2;
+	afn.D = (TRANSITION*)malloc(sizeof(TRANSITION)*afn.tailleD);
+	afn.D[0].depart = 0;
+	afn.D[0].caractere = caractere;
+	afn.D[0].arrivee = 1;
+
+	//test
+	afn.D[1].depart = 1;
+	afn.D[1].caractere = caractere;
+	afn.D[1].arrivee = 2;
 
 	return afn;
 }
 
 /**AUTOMATE FINI NON DETERMINISTES PLUS EVOLUES **/
-
 AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	AUTOMATEAFN afn; //automate que l'on renvoie
 
 	int verifCaractere=0,etatInitialAccepteur=0;
-	int etat;
-	int i,j,k,y;
-	char delim[] = "/";
-	char ** transitionTmp;
-	char* copietmp =(char*)malloc(sizeof(char));
+	int i,j;
 
 	//copie de afn1 dans afn
 	afn = copie(afn1);
-
-	//Allocation de transitionTmp
-	transitionTmp = (char**)malloc(sizeof(char*)*NOMBRE_ELEMENT_TRANSITION);
-	for (i=0;i<NOMBRE_ELEMENT_TRANSITION;i++){
-		transitionTmp[i] = (char*)malloc(sizeof(char)); //char ?
-	}
 
 	//Allocation de Ztemp au maximum (afn1.Z + afn2.Z)
 	char* Ztemp = (char*)malloc(sizeof(char)*(strlen(afn1.Z)+strlen(afn2.Z)));
@@ -219,25 +192,19 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 		verifCaractere=0; //on a pas trouvé le caractère
 		for(j=0;j<strlen(afn1.Z);j++){	//Est il deja present dans afn1
 			if(!verifCaractere){ //si on a trouvé le caractère pas besoin de continuer de le chercher
-				//printf("afn1:%d et afn2:%d\n",j,i );
 				if(afn2.Z[i]==afn1.Z[j]){ 	//Si oui on passe au prochain caractere de afn2
-					//printf("meme caractere :%c et %c\n",afn2.Z[i],afn1.Z[j] );
 					verifCaractere=1;
 					
 					
 				}else{ //Sinon on regarde s'il est présent dans un autre
-					//printf("caractere different %c et %c\n",afn2.Z[i],afn1.Z[j] );
 				}
 			}
 		}
 
 		if(!verifCaractere){ //si on a pas trouvé le caractere dans tout l'aphabet de afn1 alors on l'ajoute
-				//printf("ajout de %c\n", afn2.Z[i]);
 				Ztemp[strlen(afn1.Z)] = afn2.Z[i];
-
 		}
 	}
-	//printf("Z:%s\n",Ztemp );
 
 	//On modifie afn1.Z par Ztemp
 	//reallocation de afn1.Z
@@ -252,7 +219,6 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	if(etatInitialAccepteur==3){
 		afn.tailleF--;
 	}
-	//printf("taille:%d\n",nouvelleTailleF );
 	afn.F = (int*) realloc(afn.F,afn.tailleF*sizeof(int));
 
 	//ajout des F de afn2 et l'etat initial si accepteur
@@ -269,72 +235,21 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 
 	/* Creation de D*/
 	//reallocation de D
-	//taille de D = afn1.tailleD + afn2.tailleD
 	afn.tailleD = afn1.tailleD + afn2.tailleD;
-	afn.D = (char**)realloc(afn.D,sizeof(char*)*afn.tailleD);
-	for(i=0;i<afn.tailleD;i++){
-		afn.D[i] = realloc(afn.D[i],sizeof(char));
-	}
+	afn.D = (TRANSITION*)realloc(afn.D,sizeof(TRANSITION)*afn.tailleD);
 
 	//On ajoute les etats de afn2 en les incrémentant sauf l'etat initial 0
-	//printf("afn1:%d et afntot:%d\n",afn1.tailleD,nouvelleTailleD );
 	for(i=afn1.tailleD;i<afn.tailleD;i++){
-
-		//on sépare la chaine de transition en 3
-		
-		strcpy(copietmp,afn2.D[i-afn1.tailleD]);
-		char *ptr = strtok(copietmp, delim);
-		j=0; //index des caracteres dans afn1.D[i][j]
-
-
-		for(k=0;k<NOMBRE_ELEMENT_TRANSITION;k++)
-		{
-			transitionTmp[k] = ptr;
-			
-			//traitement sur transitionTmp[k]
-			if(k==1) //on ne modifie pas le caractere
-			{
-				afn.D[i][j] = transitionTmp[k][0];
-				j++;
-
-			}else{ // traitement des etats
-				//on ne change pas si c'est l'etat initial
-				if(!strcmp(transitionTmp[k],"0")){ 
-					afn.D[i][j] = '0';
-					j++;
-				}else{ //traitement des autres etats
-					//on passe le char en int
-					sscanf(transitionTmp[k], "%d", &etat); 
-					//on incremente avec le nombre d'etat de afn1
-					etat = etat + afn1.tailleQ - 1;
-
-					//on le remet en string (char*)
-					sprintf(transitionTmp[k], "%d", etat);
-
-					//on ajoute les char de l'etat dans la chaine de transition
-					y=0; //index de la tranisition k
-					while(transitionTmp[k][y]!='\0'){
-						afn.D[i][j] = transitionTmp[k][y];
-						j++;
-						y++;
-					}
-   					
-				}
-
-			}
-			if(k!=2){
-				//on ajoute l'element separateur si on est pas sur l'etat darrivee
-				afn.D[i][j] = '/';
-				j++;
-			}
-			
-
-
-			//on passe a la partie suivante de la transition
-			ptr = strtok(NULL, delim);
+		//On ne change pas le caractere
+		afn.D[i].caractere = afn2.D[i-afn1.tailleD].caractere;
+		//Traitements des etats
+		//On ne change pas si c'est l'etat initial 0
+		if(afn2.D[i-afn1.tailleD].depart==0){
+			afn.D[i].depart = afn2.D[i-afn1.tailleD].depart;
+		}else{
+			afn.D[i].depart = afn2.D[i-afn1.tailleD].depart + afn1.tailleQ-1;
 		}
-		afn.D[i][j] = '\0';
-			
+		afn.D[i].arrivee = afn2.D[i-afn1.tailleD].arrivee + afn1.tailleQ-1;			
 	}
 
 	return afn;
@@ -448,167 +363,57 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
 
 	unsigned int cmpS2 = 0;//nbre d'etat qui partent de s2
 	unsigned int cmpnS2 = 0;//nbre d'etat qui ne partent pas de s2
-	char delim[] = "/";
-	char* tmp=(char *) malloc(sizeof(char)*10); 
-	unsigned int y,z;
-	unsigned int etat;
 
 	for(i=0; i< afn2.tailleD; i++)
-		{	
-			strcpy(tmp,afn2.D[i]);
-			//printf("%s\n",tmp);
+	{	
 
-			if(strcmp(strtok(tmp, delim),"0") == 0) //si on trouve une transition qui part de s2
-				{
-					//printf("%s\n",tmp);
-					cmpS2++; //nbre etats qui sortent de s2
-				}
-			else
-				{
-					//printf("%s\n",tmp);
-					cmpnS2++; //nbre etats qui ne sortent pas de s2
-				}
+		if(afn2.D[i].depart == 0){
+			cmpS2++; //nbre etats qui sortent de s2
+		}else{
+			cmpnS2++; //nbre etats qui ne sortent pas de s2
 		}
 
+	}
 
-		//Taille de D et allocation de D
-		automateConcatene.tailleD = afn1.tailleD + (afn1.tailleF*cmpS2) + cmpnS2;
-		automateConcatene.D =(char **) malloc(sizeof(char*)*automateConcatene.tailleD); //remplit tab d'etat que je peux avoir depuis s2
-		for(i=0;i<automateConcatene.tailleD;i++)
+
+	//Taille de D et allocation de D
+	automateConcatene.tailleD = afn1.tailleD + (afn1.tailleF*cmpS2) + cmpnS2;
+	automateConcatene.D =(TRANSITION *) malloc(sizeof(TRANSITION)*automateConcatene.tailleD); 
+
+	//remplissage de D
+	for(i=0;i<automateConcatene.tailleD;i+=0)
+	{
+		if(i<afn1.tailleD) //on met d'abord toutes les transitions de afn1
 		{
-			automateConcatene.D[i] = (char*) malloc(sizeof(char));
+			automateConcatene.D[i].depart = afn1.D[i].depart;
+			automateConcatene.D[i].caractere = afn1.D[i].caractere;
+			automateConcatene.D[i].arrivee = afn1.D[i].arrivee;
+			i++;
 		}
-		//remplissage de D
-		for(i=0;i<automateConcatene.tailleD;i+=0)
+		else //on rajoute les nvelles transitions
 		{
-			if(i<afn1.tailleD) //on met d'abord toutes les transitions de afn1
-			{
-				strcpy(automateConcatene.D[i],afn1.D[i]);
-				//automateConcatene.D[i] = afn1.D[i];
-				i++;
-			}
-			else //on rajoute les nvelles transitions
-			{
-		
-				for(k=0;k<afn2.tailleD;k++)  //on parcours les transitions de afn2
-				{
-						
-					if(afn2.D[k][0] == '0')//si on trouve une transition qui commence par s2
-					{
-						for(j=0;j<afn1.tailleF;j++)  //pour tous les etats accepteurs de afn1
-						{
-
-							//on le remet en string (char*)
-							sprintf(tmp, "%d",afn1.F[j]);
-							y =0;
-
-							while(tmp[y] != '\0')
-							{
-								automateConcatene.D[i][y]= tmp[y];
-								y++;
-							}
-							
-							automateConcatene.D[i][y] = '/';
-							y++;
-
-							//on sépare la chaine de transition en 3
-							strcpy(tmp,afn2.D[k]);
-							char* ptr = strtok(tmp, delim);
-							ptr = strtok(NULL, delim); //pour avoir le caractere 
-
-							automateConcatene.D[i][y] = ptr[0];
-							y++;
-
-							automateConcatene.D[i][y] = '/';
-							y++;
-
-							ptr = strtok(NULL, delim); //pour avoir l'etat 
-
-							//on passe le char en int
-							sscanf(ptr, "%d", &etat); 
-							//on incremente avec le nombre d'etat de afn1
-							etat = etat + afn1.tailleQ - 1;
-
-							//on le remet en string (char*)
-							sprintf(ptr, "%d", etat);
-
-							z=0;//curseur de la chaine sur l'etat d'arrivee
-
-							//on ajoute les char de l'etat dans la chaine de transition
-							while(ptr[z]!='\0'){
-								automateConcatene.D[i][y] = ptr[z];
-								z++;
-								y++;
-							}
-
-							automateConcatene.D[i][y] = '\0';
-							i++;
-						}
-					}
-					else //sinon on ajoute la transition
-					{	
-						y=0;
-						//on sépare la chaine de transition en 3
-						strcpy(tmp,afn2.D[k]);
-						char* ptr = strtok(tmp, delim);
 	
-						//on passe le char en int
-						sscanf(ptr, "%d", &etat); 
-						//on incremente avec le nombre d'etat de afn1
-						etat = etat + afn1.tailleQ - 1;
-
-						//on le remet en string (char*)
-						sprintf(ptr, "%d", etat);
-
-						z=0;//curseur de la chaine sur l'etat d'arrivee
-
-						//on ajoute les char de l'etat dans la chaine de transition
-						while(ptr[z]!='\0'){
-							automateConcatene.D[i][y] = ptr[z];
-							z++;
-							y++;
-						}
-						automateConcatene.D[i][y] = '/';
-						y++;
-
-
-						ptr = strtok(NULL, delim); //pour avoir le caractere 
-
-						automateConcatene.D[i][y] = ptr[0];
-						y++;
-
-						automateConcatene.D[i][y] = '/';
-						y++;
-
-						ptr = strtok(NULL, delim); //pour avoir l'etat 
-
-						//on passe le char en int
-						sscanf(ptr, "%d", &etat); 
-						//on incremente avec le nombre d'etat de afn1
-						etat = etat + afn1.tailleQ - 1;
-
-						//on le remet en string (char*)
-						sprintf(ptr, "%d", etat);
-
-						z=0;//curseur de la chaine sur l'etat d'arrivee
-
-						//on ajoute les char de l'etat dans la chaine de transition
-						while(ptr[z]!='\0'){
-							automateConcatene.D[i][y] = ptr[z];
-							z++;
-							y++;
-						}
-
-						automateConcatene.D[i][y] = '\0';
+			for(k=0;k<afn2.tailleD;k++)  //on parcours les transitions de afn2
+			{
+				if (afn2.D[k].depart==0){
+				
+					for(j=0;j<afn1.tailleF;j++)  //pour tous les etats accepteurs de afn1
+					{
+						automateConcatene.D[i].depart = afn1.F[j];
+						automateConcatene.D[i].caractere = afn2.D[k].caractere;
+						automateConcatene.D[i].arrivee = afn2.D[k].arrivee + afn1.tailleQ -1;
 						i++;
 					}
-					
-				}
-				
-			}
-			
-		}
 
+				}else{
+					automateConcatene.D[i].depart = afn2.D[k].depart + afn1.tailleQ -1;
+					automateConcatene.D[i].caractere = afn2.D[k].caractere;
+					automateConcatene.D[i].arrivee = afn2.D[k].arrivee + afn1.tailleQ -1;
+					i++;
+				}	
+			}
+		}
+	}
 
 	return automateConcatene;
 }
@@ -616,8 +421,7 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
 AUTOMATEAFN kleene(AUTOMATEAFN afn)//Mise a l'etoile
 {
 	AUTOMATEAFN automateKleene;
-	unsigned int i,k,j,y,z,verif_s =0;
-	char delim[] = "/";
+	unsigned int i,k,j,verif_s =0;
 
 	//Q
 	//allocation de Q
@@ -667,110 +471,122 @@ AUTOMATEAFN kleene(AUTOMATEAFN afn)//Mise a l'etoile
 			}
 		}
 
-		//D
+	//D
 
-		//Calcul de la taille de D
-		unsigned int cmpS2 = 0;//nbre d'etat qui partent de s2
-		char* tmp=(char *) malloc(10);
+	//Calcul de la taille de D
+	unsigned int cmpS2 = 0;//nbre d'etat qui partent de s2
 
-
-		for(i=0; i< afn.tailleD; i++)
-			{	
-				strcpy(tmp,afn.D[i]);
-
-				if(strcmp(strtok(tmp, delim),"0") == 0) //si on trouve une transition qui part de s2
-					{
-						//printf("%s\n",tmp);
-						cmpS2++; //nbre etats qui sortent de s2
-					}
-				
-			}
-
-			if(verif_s==1)
+	for(i=0; i< afn.tailleD; i++)
+	{	
+		//strcpy(tmp,afn.D[i]);
+		if(afn.D[i].depart == 0) //si on trouve une transition qui part de s2
 			{
-					automateKleene.tailleD = afn.tailleD + ((afn.tailleF-1)*cmpS2);
+				cmpS2++; //nbre etats qui sortent de s2
 			}
-			else{
-					automateKleene.tailleD = afn.tailleD + (afn.tailleF*cmpS2);
-			}
-
-			//Allocation de D
-			automateKleene.D =(char **) malloc(sizeof(char*)*automateKleene.tailleD); //remplit tab d'etat que je peux avoir depuis s2
-			for(i=0;i<automateKleene.tailleD;i++)
-			{
-				automateKleene.D[i] = (char*) malloc(sizeof(char));
-			}
-
-			//remplissage de D
-			for(i=0;i<automateKleene.tailleD;i+=0)
-		{
-			if(i<afn.tailleD) //on met d'abord toutes les transitions de afn
-			{
-				strcpy(automateKleene.D[i],afn.D[i]);
-				i++;
-			}
-			else //on rajoute les nvelles transitions
-			{
 		
-				for(k=0;k<afn.tailleD;k++)  //on parcours les transitions de afn2
-				{
-						
-					if(afn.D[k][0] == '0')//si on trouve une transition qui commence par s2
+	}
+
+	if(verif_s==1)
+	{
+			automateKleene.tailleD = afn.tailleD + ((afn.tailleF-1)*cmpS2);
+	}
+	else{
+			automateKleene.tailleD = afn.tailleD + (afn.tailleF*cmpS2);
+	}
+
+	//Allocation de D
+	automateKleene.D =(TRANSITION *) malloc(sizeof(TRANSITION)*automateKleene.tailleD); //remplit tab d'etat que je peux avoir depuis s2
+	/*automateKleene.D =(char **) malloc(sizeof(char*)*automateKleene.tailleD); //remplit tab d'etat que je peux avoir depuis s2
+	for(i=0;i<automateKleene.tailleD;i++)
+	{
+		automateKleene.D[i] = (char*) malloc(sizeof(char));
+	}*/
+
+	//remplissage de D
+	for(i=0;i<automateKleene.tailleD;i+=0)
+	{
+		if(i<afn.tailleD) //on met d'abord toutes les transitions de afn
+		{
+			automateKleene.D[i].depart = afn.D[i].depart;
+			automateKleene.D[i].caractere = afn.D[i].caractere;
+			automateKleene.D[i].arrivee = afn.D[i].arrivee;
+			//strcpy(automateKleene.D[i],afn.D[i]);
+			i++;
+		}
+		else //on rajoute les nvelles transitions
+		{
+	
+			for(k=0;k<afn.tailleD;k++)  //on parcours les transitions de afn2
+			{
+				if(afn.D[k].depart == 0){
+
+					for(j=0;j<afn.tailleF;j++)  //pour tous les etats accepteurs de afn
 					{
-						for(j=0;j<afn.tailleF;j++)  //pour tous les etats accepteurs de afn
-						{
-							if(afn.F[j]!=0)
-							{
-
-								//on le remet en string (char*)
-								sprintf(tmp, "%d",afn.F[j]);
-								y =0;
-
-								while(tmp[y] != '\0')
-								{
-									automateKleene.D[i][y]= tmp[y];
-									y++;
-								}
-								
-								automateKleene.D[i][y] = '/';
-								y++;
-
-								//on sépare la chaine de transition en 3
-								strcpy(tmp,afn.D[k]);
-								char* ptr = strtok(tmp, delim);
-								ptr = strtok(NULL, delim); //pour avoir le caractere 
-
-								automateKleene.D[i][y] = ptr[0];
-								y++;
-
-								automateKleene.D[i][y] = '/';
-								y++;
-
-								ptr = strtok(NULL, delim); //pour avoir l'etat 
-
-								z=0;//curseur de la chaine sur l'etat d'arrivee
-
-								//on ajoute les char de l'etat dans la chaine de transition
-								while(ptr[z]!='\0'){
-									automateKleene.D[i][y] = ptr[z];
-									z++;
-									y++;
-								}
-
-								automateKleene.D[i][y] = '\0';
-								i++;
-							}
+						if(afn.F[j]!=0){
+							automateKleene.D[i].depart = afn.F[j];
+							automateKleene.D[i].caractere = afn.D[k].caractere;
+							automateKleene.D[i].arrivee = afn.D[k].arrivee;
+							i++;
 						}
 					}
-					
-					
 				}
+
+				/*if(afn.D[k][0] == '0')//si on trouve une transition qui commence par s2
+				{
+					for(j=0;j<afn.tailleF;j++)  //pour tous les etats accepteurs de afn
+					{
+						if(afn.F[j]!=0)
+						{
+
+							//on le remet en string (char*)
+							sprintf(tmp, "%d",afn.F[j]);
+							y =0;
+
+							while(tmp[y] != '\0')
+							{
+								automateKleene.D[i][y]= tmp[y];
+								y++;
+							}
+							
+							automateKleene.D[i][y] = '/';
+							y++;
+
+							//on sépare la chaine de transition en 3
+							strcpy(tmp,afn.D[k]);
+							char* ptr = strtok(tmp, delim);
+							ptr = strtok(NULL, delim); //pour avoir le caractere 
+
+							automateKleene.D[i][y] = ptr[0];
+							y++;
+
+							automateKleene.D[i][y] = '/';
+							y++;
+
+							ptr = strtok(NULL, delim); //pour avoir l'etat 
+
+							z=0;//curseur de la chaine sur l'etat d'arrivee
+
+							//on ajoute les char de l'etat dans la chaine de transition
+							while(ptr[z]!='\0'){
+								automateKleene.D[i][y] = ptr[z];
+								z++;
+								y++;
+							}
+
+							automateKleene.D[i][y] = '\0';
+							i++;
+						}
+					}
+				}*/
+				
 				
 			}
 			
 		}
+		
+	}
 
-			return automateKleene;
+	return automateKleene;
 }
 
 /**AUTOMATE FINI DETERMINISTES **/
@@ -783,6 +599,7 @@ AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 
 	return afd;
 }
+
 
 /** Fonctions annexe **/
 //Afficher un automate standard non deterministe
@@ -837,7 +654,8 @@ void AfficherAutomateNonDeterministe(AUTOMATEAFN afn){
 		printf("Ensemble des etats transitions (D): ");
 
 		for(i=0;i<afn.tailleD;i++){
-			printf("%s, ",afn.D[i]);
+
+			printf("%d%c%d, ",afn.D[i].depart,afn.D[i].caractere,afn.D[i].arrivee);
 		}
 		printf("\n");	
 	}else{
@@ -891,8 +709,6 @@ int afn_identique(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 
 void free_afn(AUTOMATEAFN afn)
 {
-	unsigned int i;
-
 	//Q
 	free(afn.Q);
 
@@ -910,11 +726,6 @@ void free_afn(AUTOMATEAFN afn)
 
 	//D
 	if(afn.D!=NULL){ //on n'a pas alloue pour le langage vide et le mot vide
-		for(i=0;i<afn.tailleD;i++)
-		{
-
-			free(afn.D[i]);
-		}
 		free(afn.D);
 	}	
 }
@@ -948,11 +759,12 @@ AUTOMATEAFN copie(AUTOMATEAFN afn){
 	}
 	//copie de D
 	afn_copie.tailleD = afn.tailleD;
-	afn_copie.D = (char**)malloc(sizeof(char*)*afn_copie.tailleD);
+	afn_copie.D = (TRANSITION*)malloc(sizeof(TRANSITION)*afn_copie.tailleD);
 
 	for (i=0;i<afn_copie.tailleD;i++){
-		afn_copie.D[i] = (char*)malloc(sizeof(char*));
-		strcpy(afn_copie.D[i],afn.D[i]);
+		afn_copie.D[i].depart = afn.D[i].depart;
+		afn_copie.D[i].caractere = afn.D[i].caractere;
+		afn_copie.D[i].arrivee = afn.D[i].arrivee;
 	}
 
 	return afn_copie;

@@ -11,7 +11,7 @@ typedef struct
 	char caractere;
 	unsigned int arrivee;
 
-} TRANSITION;
+} TRANSITION; //MERCI IMANE COEUR COEUR
 
 // Automate Fini Non Deterministe
 typedef struct
@@ -22,7 +22,8 @@ typedef struct
    	unsigned int s;			//s : etat initial
    	int * F;				//F : ensemble d'etats accepteurs
     int tailleF;
-   	char ** D;	
+    TRANSITION * D;
+   	//char ** D;	
     int tailleD;			//D : ensemble des transitions 1 tableau 1D, chaque case represente : etat1/lettre/etat2
     //remplacer int par un struct avec 2 int et 1 char
 } AUTOMATEAFN; 
@@ -35,9 +36,9 @@ typedef struct
    	char * Z;				//Z : Alphabet de l'automate
    	unsigned int s;			//s : etat initial
    	int * F;				//F : ensemble d'etats accepteurs
-    int tailleF;
-   	int tailleDelta;			
-    TRANSITION* Delta;		//S : Fonction de transition		
+    int tailleF;			
+    TRANSITION* Delta;		//S : Fonction de transition	
+    int tailleDelta;	
 } AUTOMATEAFD;
 
 /* Macro */
