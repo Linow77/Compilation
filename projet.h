@@ -3,28 +3,42 @@
 #include <string.h> //strcmp strlen
 
 /* STRUCTURES */
+
+//Structure d'une transition
+typedef struct 
+{
+	unsigned int depart;
+	char caractere;
+	unsigned int arrivee;
+
+} TRANSITION;
+
 // Automate Fini Non Deterministe
 typedef struct
-   {
+{
    	unsigned int * Q;		//Q : ensemble fini d'etats
-      unsigned int tailleQ;
+    unsigned int tailleQ;
    	char * Z;				//Z : Alphabet de l'automate
    	unsigned int s;			//s : etat initial
    	int * F;				//F : ensemble d'etats accepteurs
-      int tailleF;
+    int tailleF;
    	char ** D;	
-      int tailleD;			//D : ensemble des transitions 1 tableau 1D, chaque case represente : etat1/lettre/etat2
-   } AUTOMATEAFN;
+    int tailleD;			//D : ensemble des transitions 1 tableau 1D, chaque case represente : etat1/lettre/etat2
+    //remplacer int par un struct avec 2 int et 1 char
+} AUTOMATEAFN; 
 
 // Automate Fini Deterministe a revoir
 typedef struct
-   {
+{
    	unsigned int * Q;		//Q : ensemble fini d'etats
+    unsigned int tailleQ;
    	char * Z;				//Z : Alphabet de l'automate
    	unsigned int s;			//s : etat initial
    	int * F;				//F : ensemble d'etats accepteurs
-   	char ** S;				//S : ensemble des transitions 1 tableau 1D, chaque case represente : etat1/lettre/etat2
-   } AUTOMATEAFD;
+    int tailleF;
+   	int tailleDelta;			
+    TRANSITION* Delta;		//S : Fonction de transition		
+} AUTOMATEAFD;
 
 /* Macro */
 #define NOMBRE_ELEMENT_TRANSITION 3
