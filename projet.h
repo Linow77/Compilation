@@ -59,4 +59,5 @@ AUTOMATEAFN kleene(AUTOMATEAFN afn);//renvoie la version de kleene de l'automate
 void AfficherAutomate(AUTOMATEAFN afn); //permet d'afficher le contenu d'un automate standard
 int afn_identique(AUTOMATEAFN afn1, AUTOMATEAFN anf2); //permet de verifier si deux automates sont identiques
 void free_afn(AUTOMATEAFN afn); //Libère les tableaux d'un AUTOMATEAFN
+AUTOMATEAFN copie(AUTOMATEAFN afn);
 

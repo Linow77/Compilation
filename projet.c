@@ -24,14 +24,13 @@ int main() {
 	printf("\n/**** Version Kleene sur langagecaractere1 ****/\n");
 	AfficherAutomate(afnKleene);
 
-	afnUnion = unionDeDeuxAutomates(afncaractere1, afncaractere2);
+	afnUnion = unionDeDeuxAutomates(afncaractere1,afncaractere2);
 	printf("\n/**** Langage Union ****/\n");
 	AfficherAutomate(afnUnion);
 
-	afnConcatene = concatenationDeDeuxAutomates(afnUnion,afnUnion);
+	afnConcatene = concatenationDeDeuxAutomates(afncaractere1,afncaractere1);
 	printf("\n/**** Langage Concatené ****/\n");
 	AfficherAutomate(afnConcatene);
-	
 
 	//free des afn
 	free_afn(afnVide);
@@ -72,6 +71,7 @@ AUTOMATEAFN langageMotVide(){
 	afn.Q = (unsigned int*)malloc(sizeof(unsigned int));
 	afn.Q[0] = 0;
 	afn.tailleQ = 1;
+	afn.Z = (char*)malloc(sizeof(char));
 	afn.Z = ""; //Avec strlen le mot vide ne s'affiche pas dans le langage après une union
 
 	afn.s = 0;
@@ -140,12 +140,17 @@ AUTOMATEAFN langagecaractere(char caractere){
 /**AUTOMATE FINI NON DETERMINISTES PLUS EVOLUES **/
 
 AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
+	AUTOMATEAFN afn; //automate que l'on renvoie
+
 	int verifCaractere=0,etatInitialAccepteur=0;
-	int nouvelleTailleQ,nouvelleTailleF, nouvelleTailleD;
 	int etat;
 	int i,j,k,y;
 	char delim[] = "/";
 	char ** transitionTmp;
+	char* copietmp =(char*)malloc(sizeof(char));
+
+	//copie de afn1 dans afn
+	afn = copie(afn1);
 
 	//Allocation de transitionTmp
 	transitionTmp = (char**)malloc(sizeof(char*)*NOMBRE_ELEMENT_TRANSITION);
@@ -159,7 +164,7 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 
 	//Verifier que les deux afn ne sont pas identique sinon directement renvoyer l'un des deux
 	if(afn_identique(afn1,afn2)){
-		return afn1;
+		return afn;
 	}
 
 	//Verif si l'etat initial de afn1 et afn2 sont accepteur
@@ -189,15 +194,15 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 
 	//Création de Q
 	//tailleQ = tailleQ1 -1 + tailleQ2 -1 + 1
-	nouvelleTailleQ = afn1.tailleQ + afn2.tailleQ - 1;
+	afn.tailleQ = afn1.tailleQ + afn2.tailleQ - 1;
 
 	//réallocation de Q
-	afn1.Q = (unsigned int *) realloc( afn1.Q, nouvelleTailleQ * sizeof(unsigned int) );
+	afn.Q = (unsigned int *) realloc( afn.Q, afn.tailleQ * sizeof(unsigned int) );
 
 	//ajout des états de afn2 dans afn1.Q
 	for(i=0; i<afn2.tailleQ; i++){ //on ne récupère pas l'état initial de afn2
 		if(afn2.Q[i]!=0){
-			afn1.Q[afn1.tailleQ-1+i] = afn2.Q[i]+afn1.tailleQ-1; //on démarre le compte des etats de afn2 après ceux de afn1
+			afn.Q[afn1.tailleQ-1+i] = afn2.Q[i]+afn1.tailleQ-1; //on démarre le compte des etats de afn2 après ceux de afn1
 		}
 		
 	}
@@ -230,28 +235,28 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 
 	//On modifie afn1.Z par Ztemp
 	//reallocation de afn1.Z
-	afn1.Z = (char*) realloc(afn1.Z,strlen(Ztemp)*sizeof(char));
-	strcpy(afn1.Z,Ztemp);
+	afn.Z = (char*) realloc(afn.Z,strlen(Ztemp)*sizeof(char));
+	strcpy(afn.Z,Ztemp);
 
 	//s n'est pas modifié il reste 0
 
 	//Creation de F
 	//on realloue la afn1.tailleF  + afn2.tailleF -1(si l'état initial de afn2 est accepteur et celui de afn1 aussi)
-	nouvelleTailleF = afn1.tailleF + afn2.tailleF;
+	afn.tailleF = afn1.tailleF + afn2.tailleF;
 	if(etatInitialAccepteur==3){
-		nouvelleTailleF--;
+		afn.tailleF--;
 	}
 	//printf("taille:%d\n",nouvelleTailleF );
-	afn1.F = (int*) realloc(afn1.F,nouvelleTailleF*sizeof(int));
+	afn.F = (int*) realloc(afn.F,afn.tailleF*sizeof(int));
 
 	//ajout des F de afn2 et l'etat initial si accepteur
-	for(i=afn1.tailleF; i<nouvelleTailleF;i++){
+	for(i=afn1.tailleF; i<afn.tailleF;i++){
 		//on ajoute l'etat initial seulement si l'etat initial de afn2 est accepteur et pas celui de afn1
 		if(etatInitialAccepteur==2 && afn2.F[i]==0){
-			afn1.F[afn1.tailleF-1+i]=afn2.F[i];
+			afn.F[i]=afn2.F[i];
 		
 		}else{//sinon on ajoute les etats de afn2 en démarrant le compte après ceux de afn1
-			afn1.F[i]=afn2.F[i-afn1.tailleF]+afn1.tailleQ-1;
+			afn.F[i]=afn2.F[i-afn1.tailleF]+afn1.tailleQ-1;
 		}
 		
 	}
@@ -259,18 +264,20 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	/* Creation de D*/
 	//reallocation de D
 	//taille de D = afn1.tailleD + afn2.tailleD
-	nouvelleTailleD = afn1.tailleD + afn2.tailleD;
-	afn1.D = (char**)realloc(afn1.D,sizeof(char*)*nouvelleTailleD);
-	for(i=0;i<nouvelleTailleD;i++){
-		afn1.D[i] = realloc(afn1.D[i],sizeof(char));
+	afn.tailleD = afn1.tailleD + afn2.tailleD;
+	afn.D = (char**)realloc(afn.D,sizeof(char*)*afn.tailleD);
+	for(i=0;i<afn.tailleD;i++){
+		afn.D[i] = realloc(afn.D[i],sizeof(char));
 	}
 
 	//On ajoute les etats de afn2 en les incrémentant sauf l'etat initial 0
 	//printf("afn1:%d et afntot:%d\n",afn1.tailleD,nouvelleTailleD );
-	for(i=afn1.tailleD;i<nouvelleTailleD;i++){
+	for(i=afn1.tailleD;i<afn.tailleD;i++){
 
 		//on sépare la chaine de transition en 3
-		char *ptr = strtok(afn2.D[i-afn1.tailleD], delim);
+		
+		strcpy(copietmp,afn2.D[i-afn1.tailleD]);
+		char *ptr = strtok(copietmp, delim);
 		j=0; //index des caracteres dans afn1.D[i][j]
 
 
@@ -281,13 +288,13 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 			//traitement sur transitionTmp[k]
 			if(k==1) //on ne modifie pas le caractere
 			{
-				afn1.D[i][j] = transitionTmp[k][0];
+				afn.D[i][j] = transitionTmp[k][0];
 				j++;
 
 			}else{ // traitement des etats
 				//on ne change pas si c'est l'etat initial
 				if(!strcmp(transitionTmp[k],"0")){ 
-					afn1.D[i][j] = '0';
+					afn.D[i][j] = '0';
 					j++;
 				}else{ //traitement des autres etats
 					//on passe le char en int
@@ -301,7 +308,7 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 					//on ajoute les char de l'etat dans la chaine de transition
 					y=0; //index de la tranisition k
 					while(transitionTmp[k][y]!='\0'){
-						afn1.D[i][j] = transitionTmp[k][y];
+						afn.D[i][j] = transitionTmp[k][y];
 						j++;
 						y++;
 					}
@@ -311,7 +318,7 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 			}
 			if(k!=2){
 				//on ajoute l'element separateur si on est pas sur l'etat darrivee
-				afn1.D[i][j] = '/';
+				afn.D[i][j] = '/';
 				j++;
 			}
 			
@@ -320,18 +327,11 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 			//on passe a la partie suivante de la transition
 			ptr = strtok(NULL, delim);
 		}
-		afn1.D[i][j] = '\0';
+		afn.D[i][j] = '\0';
 			
 	}
 
-
-	//enregistre les nouvelle taille de Q, F et D
-	afn1.tailleF = nouvelleTailleF;
-	afn1.tailleQ = nouvelleTailleQ;
-	afn1.tailleD = nouvelleTailleD;
-
-
-	return afn1;
+	return afn;
 }
 
 AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
@@ -443,7 +443,7 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
 	unsigned int cmpS2 = 0;//nbre d'etat qui partent de s2
 	unsigned int cmpnS2 = 0;//nbre d'etat qui ne partent pas de s2
 	char delim[] = "/";
-	char* tmp=(char *) malloc(10); 
+	char* tmp=(char *) malloc(sizeof(char)*10); 
 	unsigned int y,z;
 	unsigned int etat;
 
@@ -477,7 +477,8 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
 		{
 			if(i<afn1.tailleD) //on met d'abord toutes les transitions de afn1
 			{
-				automateConcatene.D[i] = afn1.D[i];
+				strcpy(automateConcatene.D[i],afn1.D[i]);
+				//automateConcatene.D[i] = afn1.D[i];
 				i++;
 			}
 			else //on rajoute les nvelles transitions
@@ -699,7 +700,7 @@ AUTOMATEAFN kleene(AUTOMATEAFN afn)//Mise a l'etoile
 		{
 			if(i<afn.tailleD) //on met d'abord toutes les transitions de afn
 			{
-				automateKleene.D[i] = afn.D[i];
+				strcpy(automateKleene.D[i],afn.D[i]);
 				i++;
 			}
 			else //on rajoute les nvelles transitions
@@ -879,17 +880,64 @@ void free_afn(AUTOMATEAFN afn)
 	free(afn.Q);
 
 	//Z
-	//free(afn.Z);
+	if(afn.Z!=NULL && strcmp(afn.Z,"")){ //on n'a pas alloue pour le langage vide et le mot vide
+		free(afn.Z);
+	}
+	
 
 	//F
-	free(afn.F);
+	if(afn.F!=NULL){
+		free(afn.F);
+	}
+	
 
 	//D
-	/*for(i=0;i<afn.tailleD;i++)
-	{
+	if(afn.D!=NULL){ //on n'a pas alloue pour le langage vide et le mot vide
+		for(i=0;i<afn.tailleD;i++)
+		{
 
-		free(afn.D[i]);
+			free(afn.D[i]);
+		}
+		free(afn.D);
+	}
+	
+}
+
+//Copie d'un automate
+AUTOMATEAFN copie(AUTOMATEAFN afn){
+	AUTOMATEAFN afn_copie;
+	int i;
+
+	//copie de Q
+	afn_copie.tailleQ = afn.tailleQ;
+	afn_copie.Q = (unsigned int*)malloc(sizeof(unsigned int)*afn_copie.tailleQ);
+	
+	for (i=0;i<afn_copie.tailleQ;i++){
+		afn_copie.Q[i] = afn.Q[i];
 	}
 
-	free(afn.D);*/
+	//copie de Z
+	afn_copie.Z = (char*)malloc(sizeof(char));
+	strcpy(afn_copie.Z,afn.Z);
+
+	//copie de s
+	afn_copie.s = afn.s;
+
+	//copie de F
+	afn_copie.tailleF = afn.tailleF;
+	afn_copie.F = (int*)malloc(sizeof(int)*afn_copie.tailleF);
+	
+	for (i=0;i<afn_copie.tailleF;i++){
+		afn_copie.F[i] = afn.F[i];
+	}
+	//copie de D
+	afn_copie.tailleD = afn.tailleD;
+	afn_copie.D = (char**)malloc(sizeof(char*)*afn_copie.tailleD);
+
+	for (i=0;i<afn_copie.tailleD;i++){
+		afn_copie.D[i] = (char*)malloc(sizeof(char*));
+		strcpy(afn_copie.D[i],afn.D[i]);
+	}
+
+	return afn_copie;
 }
