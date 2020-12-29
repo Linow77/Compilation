@@ -29,7 +29,7 @@ int main() {
 	printf("\n/**** Langage Union ****/\n");
 	AfficherAutomateNonDeterministe(afnUnion);
 
-	afnConcatene = concatenationDeDeuxAutomates(afncaractere1,afncaractere2);
+	afnConcatene = concatenationDeDeuxAutomates(afncaractere1,afncaractere1);
 	printf("\n/**** Langage Concatené ****/\n");
 	AfficherAutomateNonDeterministe(afnConcatene);
 
@@ -41,7 +41,7 @@ int main() {
 	printf("\n/**** Version Kleene sur langagecaractere1 ****/\n");
 	AfficherAutomateNonDeterministe(afnKleene);
 
-	afd = determinisation(afnKleene);
+	afd = determinisation(afnConcatene);
 	printf("\n/**** AFD Concatené ****/\n");
 	//AfficherAutomateDeterministe(afd);
 	
@@ -607,7 +607,7 @@ AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 						if(transitions[i][z].tailleArrivee!=1){
 							printf("allocation d'une nouvelle case\n");
 							//realloue arrivee transitions
-							transitions[i][z].arrivee = (unsigned int*)malloc(sizeof(unsigned int)*transitions[i][z].tailleArrivee);
+							transitions[i][z].arrivee = (unsigned int*)realloc(transitions[i][z].arrivee,sizeof(unsigned int)*transitions[i][z].tailleArrivee);
 						}
 						
 						transitions[i][z].arrivee[transitions[i][z].tailleArrivee-1] = afn.D[k].arrivee;
@@ -627,7 +627,7 @@ AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 					if(transitions[i][z].arrivee[0]!=-1 && transitionNonValide){
 						etatDejaVu = 0; //0 = jamais vu
 						for(y=0;y<tailleEtat;y++){
-							for(m=0;m<etats[i].tailleColonne;m++) 
+							for(m=0;m<etats[y].tailleColonne;m++) 
 							{
 								printf("on regarde si tailleEtat:%d == tailleArrivee:%d\n",etats[y].tailleColonne,transitions[i][z].tailleArrivee-1);
 								printf("comparaison:%d et %d\n",etats[y].colonne[m],transitions[i][z].arrivee[m]);
