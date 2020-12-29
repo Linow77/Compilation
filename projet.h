@@ -81,4 +81,7 @@ int afn_identique(AUTOMATEAFN afn1, AUTOMATEAFN anf2); //permet de verifier si d
 void free_afn(AUTOMATEAFN afn); //Libère les tableaux d'un AUTOMATEAFN
 AUTOMATEAFN copie(AUTOMATEAFN afn); // renvoie la copie d'un automate fini non deterministe
 void AfficherAutomateDeterministe(AUTOMATEAFD afn); //permet d'afficher le contenu d'un automate standard deterministe
+void tri(unsigned int* T, int ligne); //Fonction de tri pas rapide
+void affiche_determinisation(TABETATS * etats, int tailleEtat); //affiche le tableau des etats suite a la determinisation
+
 
