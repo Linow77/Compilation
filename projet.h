@@ -4,6 +4,23 @@
 
 /* STRUCTURES */
 
+typedef struct 
+{
+	unsigned int * colonne;
+	unsigned int tailleColonne;
+
+} TABETATS; 
+
+typedef struct 
+{
+	unsigned int depart;
+	char caractere;
+	unsigned int tailleArrivee;
+	unsigned int* arrivee;
+
+} TRANSITIONDETERMINISTE; 
+
+
 //Structure d'une transition
 typedef struct 
 {
@@ -11,7 +28,7 @@ typedef struct
 	char caractere;
 	unsigned int arrivee;
 
-} TRANSITION; //MERCI IMANE COEUR COEUR
+} TRANSITION; 
 
 // Automate Fini Non Deterministe
 typedef struct

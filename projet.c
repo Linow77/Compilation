@@ -29,7 +29,7 @@ int main() {
 	printf("\n/**** Langage Union ****/\n");
 	AfficherAutomateNonDeterministe(afnUnion);
 
-	afnConcatene = concatenationDeDeuxAutomates(afncaractere1,afncaractere2);
+	afnConcatene = concatenationDeDeuxAutomates(afncaractere1,afncaractere1);
 	printf("\n/**** Langage Concatené ****/\n");
 	AfficherAutomateNonDeterministe(afnConcatene);
 
@@ -223,8 +223,9 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	//ajout des F de afn2 et l'etat initial si accepteur
 	for(i=afn1.tailleF; i<afn.tailleF;i++){
 		//on ajoute l'etat initial seulement si l'etat initial de afn2 est accepteur et pas celui de afn1
-		if(etatInitialAccepteur==2 && afn2.F[i]==0){
-			afn.F[i]=afn2.F[i];
+		if(etatInitialAccepteur==2 && afn2.F[i-afn1.tailleF]==0){
+
+			afn.F[i]=afn2.F[i-afn1.tailleF];
 		
 		}else{//sinon on ajoute les etats de afn2 en démarrant le compte après ceux de afn1
 			afn.F[i]=afn2.F[i-afn1.tailleF]+afn1.tailleQ-1;
@@ -336,9 +337,13 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
 			{
 				if(afn2.F[k]!= 0)// si ce n'est pas l'etat 0 de afn2 alors on met l'etat
 				{
-					automateConcatene.F[i] = afn2.F[k] + afn1.tailleF;
+					automateConcatene.F[i] = afn2.F[k] + afn1.tailleQ -1;
+
+				}else{
+					i--;
 				}
 				k++;
+
 
 			}
 		}
@@ -350,7 +355,7 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
 		//On remplit F
 		for(i=0;i<automateConcatene.tailleF;i++)
 		{
-			automateConcatene.F[i] = afn2.F[i];
+			automateConcatene.F[i] = afn2.F[i] + afn1.tailleQ -1;
 		}
 		
 	}
@@ -534,12 +539,128 @@ AUTOMATEAFN kleene(AUTOMATEAFN afn)//Mise a l'etoile
 /**AUTOMATE FINI DETERMINISTES **/
 AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 	AUTOMATEAFD afd; //automate que l'on retourne
+	unsigned int i,j,k,z,y;
+	unsigned int tailleEtat=1, tailleColonneEtat=afn.tailleQ;
+	TRANSITIONDETERMINISTE* transitions = (TRANSITIONDETERMINISTE *)malloc(sizeof(TRANSITIONDETERMINISTE)*afn.tailleD); //au maximum, l'afn est deja deterministe
+	unsigned int indexTransitions=0;
+	unsigned int cptColonne=0;
+	unsigned int indexColonne=0;
+
+	for (i=0;i<afn.tailleD;i++){
+		transitions[i].tailleArrivee = 1;
+		transitions[i].arrivee = (int*)malloc(sizeof(int)*transitions[i].tailleArrivee);
+		transitions[i].arrivee[0] = -1;
+		
+	}
+	
+	TABETATS * etats = (TABETATS*)malloc(sizeof(TABETATS)*tailleEtat);
+	
+	for (i=0;i<tailleEtat;i++){
+		etats[i].tailleColonne=1;
+		etats[i].colonne=(unsigned int*)malloc(sizeof(unsigned int)*etats[i].tailleColonne);
+
+		
+	}
+	//init
+	etats[0].colonne[0]=0; //1er etat 
+
+	for(i=0;i<tailleEtat;i++){
+		for(j=0;j<etats[i].tailleColonne;j++) 
+		{
+
+			transitions[indexTransitions].depart = etats[i].colonne[j];
+			printf("i:%d et j:%d -- etat :%d\n", i,j,etats[i].colonne[j]);
+			
+			for(k=0;k<afn.tailleD;k++){
+			
+				for(z=0;z<strlen(afn.Z);z++){
+					//printf("i:%d et j:%d et k:%d et z:%d\n",i,j,k,z);
+					transitions[indexTransitions].caractere = afn.Z[z];
+					//printf("depart afn : %d et depart:%d\n",afn.D[k].depart,transitions[indexTransitions].depart);
+					if(afn.D[k].depart == transitions[indexTransitions].depart &&
+						afn.D[k].caractere == transitions[indexTransitions].caractere){
+
+						// On realloue une nouvelle case si on est pas au premier tour
+						if(etats[i].tailleColonne!=1){
+							printf("allocation d'une nouvelle case\n");
+							etats[i].colonne=(unsigned int*)realloc(etats[i].colonne,sizeof(unsigned int)*etats[i].tailleColonne);
+						}
+						
+						printf("arrivee transitions2: %d avec %c \n",afn.D[k].arrivee,transitions[indexTransitions].caractere)	;	
+						
+						transitions[indexTransitions].arrivee[transitions[indexTransitions].tailleArrivee-1] = afn.D[k].arrivee;
+						printf("transition:%d\n",transitions[indexTransitions].arrivee[j] );
+						transitions[indexTransitions].tailleArrivee++;
+						//etats[i].tailleColonne++; //  On prévoit le prochain ajout
+						
+					}
+
+				}	
+				
+			}
+
+			
+
+			unsigned int etatDejaVu = 0; //0 = jamais vu
+			// On verifie si on a deja cet etat
+			for(z=0;z<tailleEtat;z++){
+				for (y=0;y<transitions[indexTransitions].tailleArrivee-1;y+=0){
+					if(etats[z].colonne[y]==transitions[indexTransitions].arrivee[y] && etats[z].tailleColonne == transitions[indexTransitions].tailleArrivee){
+						printf("case:%d et %d",transitions[indexTransitions].arrivee[y],etats[z].colonne[y]);
+						int coucou=0;
+						scanf("%d",&coucou);
+						if(y==transitions[indexTransitions].tailleArrivee-1){
+							etatDejaVu = 1;
+							printf("on a trouvé le meme\n");
+						}
+					}else{
+						printf("on change de case\n");
+						break;
+					}
+
+				}
+			}
+
+			printf("dejavu:%d\n", etatDejaVu);
+			if(!etatDejaVu){
+				//ajout de l'etat en ajoutant une case a etats
+				if (j==0){
+					tailleEtat++;
+				} 
+				etats = (TABETATS*)realloc(etats,sizeof(TABETATS)*tailleEtat);
+				etats[tailleEtat-1].tailleColonne=transitions[indexTransitions].tailleArrivee-1;
+				etats[tailleEtat-1].colonne=(unsigned int*)malloc(sizeof(unsigned int)*etats[tailleEtat-1].tailleColonne);
+				printf("tailleEtat:%d etats[tailleEtat-1].tailleColonne:%d\n",tailleEtat,etats[tailleEtat-1].tailleColonne );
+
+				//on ajoute les transitions d'arrivees dans la nouvelle case
+				printf("tailleEtat:%d\n",tailleEtat );
+				for (y=0;y<etats[tailleEtat-1].tailleColonne;y++){
+					/** avant d'ajouter verifier si pas deja present*/
+					printf("ajout de %d sur etats[%d].colonne[%d]=%d\n", transitions[indexTransitions].arrivee[y],tailleEtat-1,y+indexColonne,etats[tailleEtat-1].colonne[y]);
+					etats[tailleEtat-1].colonne[y+indexColonne] = transitions[indexTransitions].arrivee[y];
+					
+					printf("indexColonne:%d\n",indexColonne);
+				}
+				indexColonne = transitions[indexTransitions].tailleArrivee-1;
+				if(j!=0 && j==etats[i].tailleColonne-1){
+					printf("incrément taille\n");
+					tailleEtat++;
+				}
+				
+			}
+			indexTransitions++;
+			
+		}
+		indexColonne=0;
+		//on donne la taille de la colonne du nouvel etat (le prochain)
+		//etats[i].tailleColonne = transitions[indexTransitions].tailleArrivee;
 
 
+	}
 
+	//free des tableaux
 
-
-	return afd;
+		return afd;
 }
 
 
