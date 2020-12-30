@@ -40,12 +40,11 @@ typedef struct
    	int * F;				//F : ensemble d'etats accepteurs
     int tailleF;
     TRANSITION * D;
-   	//char ** D;	
-    int tailleD;			//D : ensemble des transitions 1 tableau 1D, chaque case represente : etat1/lettre/etat2
-    //remplacer int par un struct avec 2 int et 1 char
+    int tailleD;			//D : ensemble des transitions 1 tableau 1D de TRANSITION
+
 } AUTOMATEAFN; 
 
-// Automate Fini Deterministe a revoir
+// Automate Fini Deterministe 
 typedef struct
 {
    	unsigned int * Q;		//Q : ensemble fini d'etats
@@ -59,7 +58,7 @@ typedef struct
 } AUTOMATEAFD;
 
 /* Macro */
-#define NOMBRE_ELEMENT_TRANSITION 3
+
 
 /* Prototypes */
 /**AUTOMATE FINI NON DETERMINISTES **/
@@ -74,6 +73,7 @@ AUTOMATEAFN kleene(AUTOMATEAFN afn);//renvoie la version de kleene de l'automate
 
 /**AUTOMATE FINI DETERMINISTES **/
 AUTOMATEAFD determinisation(AUTOMATEAFN afn); //prend un automate fini non déterministe et renvoi un automate fini déterministe composé de ce dernier
+unsigned int verifMot(AUTOMATEAFD afd, char* mot); //Renvoie 1 si l'afd peut lire le mot, 0 sinon
 
 /** Fonctions annexe **/
 void AfficherAutomateNonDeterministe(AUTOMATEAFN afn); //permet d'afficher le contenu d'un automate standard non deterministe

@@ -4,6 +4,7 @@ int main() {
 
 	AUTOMATEAFN afnVide,afnMotVide,afncaractere1,afncaractere2, afnUnion, afnConcatene,afnKleene;
 	AUTOMATEAFD afd;
+	unsigned int motReconnu;
 
 	afnVide = langageVide();
 	printf("/**** Langage Vide ****/\n");
@@ -37,6 +38,16 @@ int main() {
 	printf("\n/**** AFD Concatené ****/\n");
 	//AfficherAutomateDeterministe(afd);
 	
+	/*motReconnu = verifMot(afncaractere1,"g");
+    if(motReconnu == 1)
+    {
+        printf("MOT RECONNU PAR L'AUTOMATE\n");
+    }
+    else
+    {
+        printf("MOT NON RECONNU PAR L'AUTOMATE\n");
+    }*/
+
 	//free des afn
 	free_afn(afnVide);
 	free_afn(afnMotVide);
@@ -543,7 +554,6 @@ AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 	unsigned int tailleEtat=1;
 	
 	unsigned int etatDejaVu = 0; //0 = jamais vu
-	unsigned int transitionNonValide = 0;
 	unsigned int cpt=0;
 
 	//allocation de transitions
@@ -557,8 +567,7 @@ AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 			transitions[i][j].arrivee = (int*)malloc(sizeof(int)*transitions[i][j].tailleArrivee);
 			//init a -1 des transitions 
 			transitions[i][j].arrivee[0] = -1;
-		}
-				
+		}		
 	}
 	
 	//allocation de etats
@@ -572,7 +581,6 @@ AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 	}
 	//init du premier etat avec 0
 	etats[0].colonne[0]=0; //1er etat 
-
 
 	for(i=0;i<tailleEtat;i++){	//Pour toutes les cases de etats
 		//printf("i:%d\n",i );
@@ -622,20 +630,10 @@ AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 							//printf("l'etat est deja dans la case transition\n");
 						}
 
-
-						
-						
-						
-						
 					}else{
 
 						//printf("transition apres:%d\n",transitions[i][z].arrivee[transitions[i][z].tailleArrivee-cpt-1]);
 					}
-
-					
-
-					
-					
 
 				}
 				//On a regardé toutes les transitions depuis 
@@ -738,11 +736,11 @@ AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 
 
 	/**Remplissage de AFD **/
+	
 
 
 
-
-	//free des tableaux
+	/**free des tableaux **/
 	//free de transitions
 	/*
 	for (i=0;i<tailleEtat;i++){
@@ -758,8 +756,6 @@ AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 	free(transitions);
 	*/
 
-	
-
 	//free des etats	
 	for (i=0;i<tailleEtat;i++){
 		free(etats[i].colonne);		
@@ -767,6 +763,47 @@ AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 	free(etats);
 
 		return afd;
+}
+
+unsigned int verifMot(AUTOMATEAFD afd, char* mot)
+{
+    unsigned int etatinit = afd.s;
+    unsigned int etatActuel = -1;
+    unsigned i,j;
+
+    for(i=0;i<strlen(mot);i++)
+    {
+        //On regarde si on a une transition qui commence par etatInit et qui a pour caractere mot[i]
+        for(j=0;j<afd.tailleDelta;j++)
+        {
+            if((etatinit == afd.Delta[j].depart)&&(afd.Delta[j].caractere == mot[i]))
+            {
+                etatActuel = afd.Delta[j].arrivee;
+            }
+        }
+        //On vérifie si on est sur le dernier caractere de mot et si on est sur un etat final
+        if(i==strlen(mot)-1)
+        {
+            for(j=0;j<afd.tailleF;j++)
+            {
+                if(etatActuel == afd.F[j])
+                {
+                    return 1;
+                }
+            }
+        }
+        //Sinon on a trouvé une transition et on continue la traitement
+        if(etatActuel != -1)
+        {
+            etatinit = etatActuel;
+            etatActuel =-1;
+        }
+        else //sinon on renvoie 0, on ne peut pas lire le mot
+        {
+            return 0;
+        }
+
+    }
 }
 
 
