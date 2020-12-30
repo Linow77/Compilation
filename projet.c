@@ -275,8 +275,7 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	return afn;
 }
 
-AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
-{
+AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	AUTOMATEAFN automateConcatene; 
 	int i,j,verifCaractere;
 
@@ -440,8 +439,8 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2)
 	return automateConcatene;
 }
 
-AUTOMATEAFN kleene(AUTOMATEAFN afn)//Mise a l'etoile
-{
+//Mise a l'etoile
+AUTOMATEAFN kleene(AUTOMATEAFN afn){
 	AUTOMATEAFN automateKleene;
 	unsigned int i,k,j,verif_s =0;
 
@@ -881,8 +880,7 @@ AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 	return afd;
 }
 
-unsigned int verifMot(AUTOMATEAFD afd, char* mot)
-{
+unsigned int verifMot(AUTOMATEAFD afd, char* mot){
     unsigned int etatinit = afd.s;
     unsigned int etatActuel = -1;
     unsigned i,j;
@@ -1034,8 +1032,7 @@ int afn_identique(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	return 1; //si tout est identique
 }
 
-void free_afn(AUTOMATEAFN afn)
-{
+void free_afn(AUTOMATEAFN afn){
 	//Q
 	free(afn.Q);
 
@@ -1203,12 +1200,15 @@ void affiche_transitions(TRANSITIONDETERMINISTE** transitions,int tailleEtat, in
 	printf("/*** Transitions ***/\n");
 	for (i=0;i<tailleEtat;i++){
 		for (j=0;j<tailleZ;j++){
-			printf("transitions[i][j].arrivee:");
+			//printf("transitions[i][j].arrivee:");
+			printf("%c: ",transitions[i][j].caractere );
 			for(y=0;y<transitions[i][j].tailleArrivee-1;y++){
-				printf("%d ",transitions[i][j].arrivee[y]);
+				printf("%2.d ",transitions[i][j].arrivee[y]);
 			}
-			printf("\n");
+			
 		}
+		printf("\n");
+
 	}
 }
 

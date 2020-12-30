@@ -57,8 +57,6 @@ typedef struct
     int tailleDelta;	
 } AUTOMATEAFD;
 
-/* Macro */
-
 
 /* Prototypes */
 /**AUTOMATE FINI NON DETERMINISTES **/
@@ -83,7 +81,7 @@ AUTOMATEAFN copie(AUTOMATEAFN afn); // renvoie la copie d'un automate fini non d
 void AfficherAutomateDeterministe(AUTOMATEAFD afn); //permet d'afficher le contenu d'un automate standard deterministe
 void tri(int* T, int ligne); //Fonction de tri pas rapide
 void affiche_determinisation(TABETATS * etats, int tailleEtat); //affiche le tableau des etats suite a la determinisation
-void affiche_transitions(TRANSITIONDETERMINISTE** transitions,int tailleEtat, int tailleZ);
-int verif_ajout_non_present(int* arrivee, int tailleArrivee, int ajout);
+void affiche_transitions(TRANSITIONDETERMINISTE** transitions,int tailleEtat, int tailleZ); //afficher le tableau transitions
+int verif_ajout_non_present(int* arrivee, int tailleArrivee, int ajout); //verifie si la valeur ajout est presente dans le tableau arrivee
 
 
