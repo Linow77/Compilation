@@ -16,7 +16,7 @@ typedef struct
 	unsigned int depart;
 	char caractere;
 	unsigned int tailleArrivee;
-	unsigned int* arrivee;
+	int* arrivee;
 
 } TRANSITIONDETERMINISTE; 
 
@@ -81,9 +81,9 @@ int afn_identique(AUTOMATEAFN afn1, AUTOMATEAFN anf2); //permet de verifier si d
 void free_afn(AUTOMATEAFN afn); //Libère les tableaux d'un AUTOMATEAFN
 AUTOMATEAFN copie(AUTOMATEAFN afn); // renvoie la copie d'un automate fini non deterministe
 void AfficherAutomateDeterministe(AUTOMATEAFD afn); //permet d'afficher le contenu d'un automate standard deterministe
-void tri(unsigned int* T, int ligne); //Fonction de tri pas rapide
+void tri(int* T, int ligne); //Fonction de tri pas rapide
 void affiche_determinisation(TABETATS * etats, int tailleEtat); //affiche le tableau des etats suite a la determinisation
 void affiche_transitions(TRANSITIONDETERMINISTE** transitions,int tailleEtat, int tailleZ);
-int verif_ajout_non_present(unsigned int* arrivee, int tailleArrivee, int ajout);
+int verif_ajout_non_present(int* arrivee, int tailleArrivee, int ajout);
 
 
