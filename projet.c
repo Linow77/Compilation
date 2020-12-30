@@ -2,7 +2,7 @@
 
 int main() {
 
-	AUTOMATEAFN afnVide,afnMotVide,afncaractere1,afncaractere2, afnUnion, afnConcatene,afnKleene,afnConcatene2;
+	AUTOMATEAFN afnVide,afnMotVide,afncaractere1,afncaractere2, afnUnion, afnConcatene,afnKleene;
 	AUTOMATEAFD afd;
 
 	afnVide = langageVide();
@@ -33,23 +33,7 @@ int main() {
 	printf("\n/**** Langage Concatené ****/\n");
 	AfficherAutomateNonDeterministe(afnConcatene);
 
-	afnConcatene2 = concatenationDeDeuxAutomates(afncaractere1,afncaractere2);
-	printf("\n/**** Langage Concatené ****/\n");
-	AfficherAutomateNonDeterministe(afnConcatene);
-
-	afnUnion = unionDeDeuxAutomates(afnConcatene,afnConcatene2);
-	printf("\n/**** Langage Union ****/\n");
-	AfficherAutomateNonDeterministe(afnUnion);
-
-	//afnConcatene = concatenationDeDeuxAutomates(afnConcatene,afnConcatene);
-	//printf("\n/**** Langage Concatené ****/\n");
-	//AfficherAutomateNonDeterministe(afnConcatene);
-
-	//afnKleene = kleene(afnConcatene);
-	//printf("\n/**** Version Kleene sur langagecaractere1 ****/\n");
-	//AfficherAutomateNonDeterministe(afnKleene);
-
-	afd = determinisation(afnUnion);
+	afd = determinisation(afnConcatene);
 	printf("\n/**** AFD Concatené ****/\n");
 	//AfficherAutomateDeterministe(afd);
 	
@@ -61,7 +45,6 @@ int main() {
 	free_afn(afnUnion);
 	free_afn(afnConcatene);
 	free_afn(afnKleene);
-	free_afn(afnConcatene2);
 
 	return 1;
 
