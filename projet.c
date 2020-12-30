@@ -49,6 +49,8 @@ int main() {
 	afd = determinisation(afnConcatene);
 	printf("\n/**** AFD ****/\n");
 	AfficherAutomateDeterministe(afd);
+
+	
 	
 	motReconnu = verifMot(afd,"aaa");
     if(motReconnu == 1)
@@ -59,6 +61,10 @@ int main() {
     {
         printf("MOT NON RECONNU PAR L'AUTOMATE\n");
     }
+
+    afd = minimisation(afd);
+	printf("\n/**** AFD Minimise****/\n");
+	//AfficherAutomateDeterministe(afd);
 
 	//free des afn
 	free_afn(afnVide);
@@ -923,7 +929,166 @@ unsigned int verifMot(AUTOMATEAFD afd, char* mot){
     return 0;
 }
 
+AUTOMATEAFD minimisation(AUTOMATEAFD afd){
+	AUTOMATEAFD afdMin; //automate minimise renvoye
 
+	int** transitionsTmp;
+	int* bilan1;
+	int* bilan2;
+	int i,j,k;
+	int bilanEgaux=0;
+	int final;
+	int transitionPossible = 0;
+	int arriveeTransition = -1;
+	int indexBilan=0;
+
+	//Allocation des variables temporaires
+	transitionsTmp = (int**)malloc(sizeof(int*)*strlen(afd.Z));
+	for(i=0;i<strlen(afd.Z);i++){
+		transitionsTmp[i] = (int*)malloc(sizeof(int)*afd.tailleQ);
+	}
+	bilan1 = (int*)malloc(sizeof(int)*afd.tailleQ);
+	bilan2 = (int*)malloc(sizeof(int)*afd.tailleQ);
+
+	//Init du premier bilan
+	for(i=0;i<afd.tailleQ;i++){
+		//On regarde si l'element appartient aux etats finaux
+		final=0;
+		for(j=0;j<afd.tailleF;j++){
+			if(i==afd.F[j]){
+				printf("etat %d est final\n",i);
+				final=1;
+				break;
+			}
+		}
+
+		if(final){//on met 1 dans bilan[i]
+			bilan1[i]=1;
+		}else{//on met 0
+			bilan1[i]=0;
+		}
+
+	}
+
+	afficheBilan(bilan1,afd.tailleQ);
+	//Tant que les bilans ne sont pas egaux on continue
+	while(!bilanEgaux){
+		
+		//On rempli transitionsTmp
+		for(i=0;i<strlen(afd.Z);i++){
+			for(j=0;j<afd.tailleQ;j++){
+				//on cherche la transition qui part de i avec le caractere j, si elle existe
+				transitionPossible=0;
+				for(k=0;k<afd.tailleDelta;k++){
+					if(afd.Delta[k].depart==j && afd.Delta[k].caractere==afd.Z[i]){
+						printf("transition:%d%c%d\n",afd.Delta[k].depart,afd.Delta[k].caractere,afd.Delta[k].arrivee);
+						arriveeTransition = afd.Delta[k].arrivee;
+						transitionPossible=1;
+					}
+				}
+				//On verifie qu'il existe une transitions de i avec le caractere lu
+				if(transitionPossible){
+					//On ajoute dans transitionsTmp[i][j] le resultat du dernier bilan pour l'arrivee de l'etat i
+					printf("ajout de %d dans transitionstmp[%d][%d]\n",bilan1[arriveeTransition],i,j);
+					transitionsTmp[i][j]=bilan1[arriveeTransition];
+
+				}else{
+					transitionsTmp[i][j]=-1;
+					printf("il n'y pas de transitions depuis %d avec %c\n",i,afd.Z[i] );
+				}
+				
+
+
+			}
+		}
+		printf("transition[0]:\t");
+		afficheBilan(transitionsTmp[0],afd.tailleQ);
+		printf("transition[1]:\t");
+		afficheBilan(transitionsTmp[1],afd.tailleQ);
+
+		
+		//Init de bilan 2 a -1
+		for(i=0;i<afd.tailleQ;i++){//Pour toutes les cases de bilan et celle de transitionsTmp
+			bilan2[i]=-1;
+		}
+		afficheBilan(bilan2,afd.tailleQ);
+
+		//On rempli bilan2
+		indexBilan=0;
+		//On cherche les cases qui ont leur etat dans bilan1 egaux, ainsi que leurs etats egaux pour chaque transitions
+		
+		//On regarde si d'autres cases ont les memes attributs que bilan2[0]
+		for(i=0;i<afd.tailleQ;i++){//Pour toutes les cases de bilan2
+			//si elle n'est pas encore rempli
+			if(bilan2[i]==-1){
+				//on met la premiere case a indexBilan
+				bilan2[i]=indexBilan;
+
+				//On cherche les autres cases qui auront le meme index
+				for(j=i+1;j<afd.tailleQ;j++){
+					if(bilan1[i]==bilan1[j]){
+						printf("case de bilan1[%d] et bilan1[%d] identique\n",i,j);
+						//On regarde si les cases de transitions sont identiques
+						for(k=0;k<strlen(afd.Z);k++){
+							if(transitionsTmp[k][i]!=transitionsTmp[k][j]){
+								printf("transitionsTmp[%d][%d] et transitionsTmp[%d][%d] pasidentiques\n",k,i,k,j );
+								break; //on arrete la for sur k
+							}
+
+							if(k==strlen(afd.Z)-1){
+								printf("Les attributs de i:%d et j:%d sont identiques\n",i,j);
+								//On met a la case j le meme index que i
+								bilan2[j]=indexBilan;
+							}
+						}
+					}
+					//printf("on compare la case %d avec la case %d\n",i,j );
+				}
+			indexBilan++;
+			}
+			
+		}
+		afficheBilan(bilan2,afd.tailleQ);
+
+		bilanEgaux=1;
+		//Comparaison des bilans
+		for(i=0;i<afd.tailleQ;i++){
+			//printf("comparaison des bilans\n");
+			if(bilan1[i]!=bilan2[i]){//un element ne correspond pas
+				printf("bilan differents\n");
+				bilanEgaux=0;
+				//On met bilan2 dans bilan1
+				for(j=0;j<afd.tailleQ;j++){
+					bilan1[j]=bilan2[j];
+				}
+				afficheBilan(bilan1,afd.tailleQ);
+				break;
+			}
+		}
+		
+	}
+
+	printf("Bilan final\n");
+	afficheBilan(bilan2,afd.tailleQ);
+	
+	/** Remplissage de afdMin **/
+
+
+	//free des tableaux
+
+
+	return afdMin;
+}
+
+void afficheBilan(int* bilan, int taille){
+	int i;
+	printf("Bilan:\t");
+	for(i=0;i<taille;i++){
+		printf("%d ",bilan[i] );
+
+	}
+	printf("\n");
+}
 /** Fonctions annexe **/
 //Afficher un automate standard non deterministe
 void AfficherAutomateNonDeterministe(AUTOMATEAFN afn){

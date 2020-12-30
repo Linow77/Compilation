@@ -72,6 +72,7 @@ AUTOMATEAFN kleene(AUTOMATEAFN afn);//renvoie la version de kleene de l'automate
 /**AUTOMATE FINI DETERMINISTES **/
 AUTOMATEAFD determinisation(AUTOMATEAFN afn); //prend un automate fini non déterministe et renvoi un automate fini déterministe composé de ce dernier
 unsigned int verifMot(AUTOMATEAFD afd, char* mot); //Renvoie 1 si l'afd peut lire le mot, 0 sinon
+AUTOMATEAFD minimisation(AUTOMATEAFD afd); //prend un automate fini determinisite et renvoi un automate fini deterministe minimisé
 
 /** Fonctions annexe **/
 void AfficherAutomateNonDeterministe(AUTOMATEAFN afn); //permet d'afficher le contenu d'un automate standard non deterministe
@@ -83,5 +84,6 @@ void tri(int* T, int ligne); //Fonction de tri pas rapide
 void affiche_determinisation(TABETATS * etats, int tailleEtat); //affiche le tableau des etats suite a la determinisation
 void affiche_transitions(TRANSITIONDETERMINISTE** transitions,int tailleEtat, int tailleZ); //afficher le tableau transitions
 int verif_ajout_non_present(int* arrivee, int tailleArrivee, int ajout); //verifie si la valeur ajout est presente dans le tableau arrivee
+void afficheBilan(int* bilan, int taille);
 
 
