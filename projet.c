@@ -2,7 +2,7 @@
 
 int main() {
 
-	AUTOMATEAFN afnVide,afnMotVide,afncaractere1,afncaractere2, afnUnion, afnConcatene,afnKleene;
+	AUTOMATEAFN afnVide,afnMotVide,afncaractere1,afncaractere2, afnUnion, afnConcatene,afnKleene,afnConcatene2;
 	AUTOMATEAFD afd;
 	unsigned int motReconnu;
 
@@ -34,11 +34,19 @@ int main() {
 	printf("\n/**** Langage Concatené ****/\n");
 	AfficherAutomateNonDeterministe(afnConcatene);
 
-	afd = determinisation(afnConcatene);
-	printf("\n/**** AFD Concatené ****/\n");
-	//AfficherAutomateDeterministe(afd);
+	afnConcatene2 = concatenationDeDeuxAutomates(afncaractere1,afncaractere2);
+	printf("\n/**** Langage Concatené ****/\n");
+	AfficherAutomateNonDeterministe(afnConcatene);
+
+	afnUnion = unionDeDeuxAutomates(afnConcatene,afnConcatene2);
+	printf("\n/**** Langage Union ****/\n");
+	AfficherAutomateNonDeterministe(afnUnion);
+
+	afd = determinisation(afnUnion);
+	printf("\n/**** AFD ****/\n");
+	AfficherAutomateDeterministe(afd);
 	
-	/*motReconnu = verifMot(afncaractere1,"g");
+	motReconnu = verifMot(afd,"aaa");
     if(motReconnu == 1)
     {
         printf("MOT RECONNU PAR L'AUTOMATE\n");
@@ -46,7 +54,7 @@ int main() {
     else
     {
         printf("MOT NON RECONNU PAR L'AUTOMATE\n");
-    }*/
+    }
 
 	//free des afn
 	free_afn(afnVide);
@@ -56,6 +64,7 @@ int main() {
 	free_afn(afnUnion);
 	free_afn(afnConcatene);
 	free_afn(afnKleene);
+	free_afn(afnConcatene2);
 
 	return 1;
 
@@ -550,12 +559,14 @@ AUTOMATEAFN kleene(AUTOMATEAFN afn)//Mise a l'etoile
 /**AUTOMATE FINI DETERMINISTES **/
 AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 	AUTOMATEAFD afd; //automate que l'on retourne
+
 	unsigned int i,j,k,z,y,m;
 	unsigned int tailleEtat=1;
 	
 	unsigned int etatDejaVu = 0; //0 = jamais vu
 	unsigned int cpt=0;
 
+	/** Creation des tableaux etats et transitions **/
 	//allocation de transitions
 	TRANSITIONDETERMINISTE** transitions = (TRANSITIONDETERMINISTE **)malloc(sizeof(TRANSITIONDETERMINISTE*)*tailleEtat);  //lignes
 
@@ -736,6 +747,111 @@ AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 
 
 	/**Remplissage de AFD **/
+	//Creation de Q
+	afd.tailleQ = tailleEtat;
+	//allocation de Q
+	afd.Q = (unsigned int*)malloc(sizeof(unsigned int)*afd.tailleQ);
+	//Remplissage de Q
+	for(i=0;i<afd.tailleQ;i++){
+		afd.Q[i]=i;
+	}
+
+	//Creation de Z, l'alphabet est inchangé
+	afd.Z=(char*)malloc(sizeof(char));
+	strcpy(afd.Z,afn.Z);
+
+	//Creation de s, l'etat initial est le même
+	afd.s=afn.s; //=0
+
+	//Creation de F
+	//Un etat i de afd est final si l'un de ses etats dans afn l'etait
+	int dejaPresent=0;
+	//Allocation de F au maximum
+	afd.F = (int*)malloc(sizeof(int)*afn.tailleQ);
+	afd.tailleF=0;
+	//Initialisation de F a -1 (au cas ou letat initial 0 est final)
+	for (i = 0; i < afn.tailleQ; i++)
+	{
+		afd.F[i]=-1;
+	}
+
+	for(i=0;i<tailleEtat;i++){//pour toutes les cases de etats
+		
+		for(j=0;j<etats[i].tailleColonne;j++){//pour tous les etats de chaque cases etats
+		//Pour tous les etats accepteurs de afn
+			for(k=0;k<afn.tailleF;k++){ //pour tous les etats accepteurs de afn
+				//si un etat de etats[i].colonne est final alors i est final dans afd
+				if(etats[i].colonne[j]==afn.F[k]){
+					//On regarde si l'etat i est deja final (appartient aux etats finaux de afd)
+					for (m = 0; m < afd.tailleF; m++)
+					{
+						if(i==afd.F[m]){
+							dejaPresent=1;
+							break;
+						}
+					}
+					//on ajoute l'etat s'il nest pas deja dans afd.F
+					if (!dejaPresent){
+						afd.F[afd.tailleF]=i;
+						afd.tailleF++;
+					}
+				}
+			}
+		}
+		dejaPresent=0;
+	}
+
+	//realloue F a la bonne taille
+	afd.F = (int*)realloc(afd.F,sizeof(int)*afd.tailleF-1);
+			
+	//Creation de Delta
+	//On va lire toutes les transitions dans le tableau de transitions et changer les tableaux d'arrivé par l'etat qui correspond
+	//On alloue D au maximum : strlen(afn.Z)*tailleEtat
+	afd.Delta = (TRANSITION*)malloc(sizeof(TRANSITION)*(strlen(afn.Z)*tailleEtat));
+	afd.tailleDelta = 0;
+
+	for(i=0;i<tailleEtat;i++){ 
+		for(j=0;j<strlen(afn.Z);j++){
+			afd.Delta[afd.tailleDelta].depart = afd.Q[i]; 	//le depart est l'etat que l'on regarde dans nos nouveaux etats Q
+			afd.Delta[afd.tailleDelta].caractere = transitions[i][j].caractere;
+
+			//on cherche quel etat dans nos nouveaux etats, representent les arrivees  
+			for(k=1;k<tailleEtat;k++){ //Dans toutes les cases de etats sauf la premiere
+				//on verifie que la premiere case ne contient pas -1
+				//on compare la taille des cases
+					if(transitions[i][j].tailleArrivee-1 == etats[k].tailleColonne){
+						etatDejaVu = 0; //0 = jamais vu
+						//On compare chaque elements entre eux
+						for(y=0;y<etats[k].tailleColonne;y++){ //Dans tous les etats de chaque case
+						
+							if(transitions[i][j].arrivee[y]==etats[k].colonne[y]){
+								if(y+1==transitions[i][j].tailleArrivee-1){
+									etatDejaVu = 1;
+									afd.Delta[afd.tailleDelta].arrivee = afd.Q[k];
+
+									//printf("**Transitions**\n");
+									//printf("%d%c%d\n",afd.Delta[afd.tailleDelta].depart,afd.Delta[afd.tailleDelta].caractere,afd.Delta[afd.tailleDelta].arrivee );
+
+									afd.tailleDelta++;
+
+										
+
+								}
+							}else{
+								break; //termine la for sur y --> on passe a k+1
+							}
+						}
+					}
+
+			}
+
+		
+		}
+	}
+
+	//reallocation de Delta la bonne taille
+	afd.Delta = (TRANSITION*)realloc(afd.Delta,sizeof(TRANSITION)*afd.tailleDelta);
+
 	
 
 
@@ -762,7 +878,7 @@ AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 	}
 	free(etats);
 
-		return afd;
+	return afd;
 }
 
 unsigned int verifMot(AUTOMATEAFD afd, char* mot)
@@ -781,6 +897,7 @@ unsigned int verifMot(AUTOMATEAFD afd, char* mot)
                 etatActuel = afd.Delta[j].arrivee;
             }
         }
+
         //On vérifie si on est sur le dernier caractere de mot et si on est sur un etat final
         if(i==strlen(mot)-1)
         {
@@ -792,6 +909,7 @@ unsigned int verifMot(AUTOMATEAFD afd, char* mot)
                 }
             }
         }
+
         //Sinon on a trouvé une transition et on continue la traitement
         if(etatActuel != -1)
         {
@@ -804,6 +922,9 @@ unsigned int verifMot(AUTOMATEAFD afd, char* mot)
         }
 
     }
+
+    //si mot vide
+    return 0;
 }
 
 
@@ -999,6 +1120,7 @@ void AfficherAutomateDeterministe(AUTOMATEAFD afd){
 		printf("Alphabet de l'automate (Z): mot vide\n");
 	}else{
 		tailleZ = strlen(afd.Z);
+		printf("tailleZ:%d",tailleZ);
 		printf("Alphabet de l'automate (Z): ");
 		for(i=0;i<tailleZ;i++){
 			printf("%c, ",afd.Z[i]);
