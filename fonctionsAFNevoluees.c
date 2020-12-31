@@ -81,40 +81,42 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 		}
 	}
 
-	//On modifie afn1.Z par Ztemp
-	//reallocation de afn1.Z
+	
+	//reallocation de afn1.Z a la bonne taille
 	afn.Z = (char*) realloc(afn.Z,strlen(Ztemp)*sizeof(char));
+	//On modifie afn1.Z par Ztemp
 	strcpy(afn.Z,Ztemp);
 
 	//s n'est pas modifié il reste 0
 
 	//Creation de F
-	//on realloue la afn1.tailleF  + afn2.tailleF -1(si l'état initial de afn2 est accepteur et celui de afn1 aussi)
+	//on modifie la taille de F par afn1.tailleF + afn2.tailleF 
 	afn.tailleF = afn1.tailleF + afn2.tailleF;
+	//-1 si l'état initial de afn2 est accepteur et celui de afn1 aussi (cas 3)
 	if(etatInitialAccepteur==3){
 		afn.tailleF--;
 	}
+	//On realloue F a la bonne taille
 	afn.F = (int*) realloc(afn.F,afn.tailleF*sizeof(int));
 
-	//ajout des F de afn2 et l'etat initial si accepteur
+	//ajout des etats finaux de afn2 et son etat initial est final
 	for(i=afn1.tailleF; i<afn.tailleF;i++){
 		//on ajoute l'etat initial seulement si l'etat initial de afn2 est accepteur et pas celui de afn1
 		if(etatInitialAccepteur==2 && afn2.F[i-afn1.tailleF]==0){
-
 			afn.F[i]=afn2.F[i-afn1.tailleF];
-		
-		}else{//sinon on ajoute les etats de afn2 en démarrant le compte après ceux de afn1
+		}else{//sinon on ajoute les etats finaux de afn2 en les incrementant avec les etats de afn1
 			afn.F[i]=afn2.F[i-afn1.tailleF]+afn1.tailleQ-1;
 		}
 		
 	}
 
 	/* Creation de D*/
-	//reallocation de D
+	//On ajoute toutes les transitions de afn2 a afn1
 	afn.tailleD = afn1.tailleD + afn2.tailleD;
+	//reallocation de D a la bonne taille
 	afn.D = (TRANSITION*)realloc(afn.D,sizeof(TRANSITION)*afn.tailleD);
 
-	//On ajoute les etats de afn2 en les incrémentant sauf l'etat initial 0
+	//On ajoute les etats de afn2 en les incrémentant avec les etats de afn1 sauf l'etat initial 0
 	for(i=afn1.tailleD;i<afn.tailleD;i++){
 		//On ne change pas le caractere
 		afn.D[i].caractere = afn2.D[i-afn1.tailleD].caractere;
