@@ -85,5 +85,6 @@ void affiche_determinisation(TABETATS * etats, int tailleEtat); //affiche le tab
 void affiche_transitions(TRANSITIONDETERMINISTE** transitions,int tailleEtat, int tailleZ); //afficher le tableau transitions
 int verif_ajout_non_present(int* arrivee, int tailleArrivee, int ajout); //verifie si la valeur ajout est presente dans le tableau arrivee
 void afficheBilan(int* bilan, int taille);
+AUTOMATEAFD copie_afd(AUTOMATEAFD afd);
 
 

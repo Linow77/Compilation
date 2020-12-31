@@ -50,8 +50,6 @@ int main() {
 	printf("\n/**** AFD ****/\n");
 	AfficherAutomateDeterministe(afd);
 
-	
-	
 	motReconnu = verifMot(afd,"aaa");
     if(motReconnu == 1)
     {
@@ -64,7 +62,7 @@ int main() {
 
     afd = minimisation(afd);
 	printf("\n/**** AFD Minimise****/\n");
-	//AfficherAutomateDeterministe(afd);
+	AfficherAutomateDeterministe(afd);
 
 	//free des afn
 	free_afn(afnVide);
@@ -935,12 +933,20 @@ AUTOMATEAFD minimisation(AUTOMATEAFD afd){
 	int** transitionsTmp;
 	int* bilan1;
 	int* bilan2;
-	int i,j,k;
+	int i,j,k,m;
 	int bilanEgaux=0;
 	int final;
 	int transitionPossible = 0;
 	int arriveeTransition = -1;
 	int indexBilan=0;
+	int compteurComparaison=0;
+	int indexF=0;
+	int* etatsTmp;
+	int indexEtatsTmp;
+	int present=0;
+	int* suiviBilan;
+	int dernierEtat=-1;
+	int indexDelta=0;
 
 	//Allocation des variables temporaires
 	transitionsTmp = (int**)malloc(sizeof(int*)*strlen(afd.Z));
@@ -950,13 +956,14 @@ AUTOMATEAFD minimisation(AUTOMATEAFD afd){
 	bilan1 = (int*)malloc(sizeof(int)*afd.tailleQ);
 	bilan2 = (int*)malloc(sizeof(int)*afd.tailleQ);
 
+	suiviBilan = (int*)malloc(sizeof(int)*afd.tailleQ);
+
 	//Init du premier bilan
 	for(i=0;i<afd.tailleQ;i++){
 		//On regarde si l'element appartient aux etats finaux
 		final=0;
 		for(j=0;j<afd.tailleF;j++){
 			if(i==afd.F[j]){
-				printf("etat %d est final\n",i);
 				final=1;
 				break;
 			}
@@ -970,7 +977,6 @@ AUTOMATEAFD minimisation(AUTOMATEAFD afd){
 
 	}
 
-	afficheBilan(bilan1,afd.tailleQ);
 	//Tant que les bilans ne sont pas egaux on continue
 	while(!bilanEgaux){
 		
@@ -981,7 +987,6 @@ AUTOMATEAFD minimisation(AUTOMATEAFD afd){
 				transitionPossible=0;
 				for(k=0;k<afd.tailleDelta;k++){
 					if(afd.Delta[k].depart==j && afd.Delta[k].caractere==afd.Z[i]){
-						printf("transition:%d%c%d\n",afd.Delta[k].depart,afd.Delta[k].caractere,afd.Delta[k].arrivee);
 						arriveeTransition = afd.Delta[k].arrivee;
 						transitionPossible=1;
 					}
@@ -989,29 +994,21 @@ AUTOMATEAFD minimisation(AUTOMATEAFD afd){
 				//On verifie qu'il existe une transitions de i avec le caractere lu
 				if(transitionPossible){
 					//On ajoute dans transitionsTmp[i][j] le resultat du dernier bilan pour l'arrivee de l'etat i
-					printf("ajout de %d dans transitionstmp[%d][%d]\n",bilan1[arriveeTransition],i,j);
 					transitionsTmp[i][j]=bilan1[arriveeTransition];
 
 				}else{
 					transitionsTmp[i][j]=-1;
-					printf("il n'y pas de transitions depuis %d avec %c\n",i,afd.Z[i] );
 				}
 				
 
 
 			}
 		}
-		printf("transition[0]:\t");
-		afficheBilan(transitionsTmp[0],afd.tailleQ);
-		printf("transition[1]:\t");
-		afficheBilan(transitionsTmp[1],afd.tailleQ);
-
 		
 		//Init de bilan 2 a -1
 		for(i=0;i<afd.tailleQ;i++){//Pour toutes les cases de bilan et celle de transitionsTmp
 			bilan2[i]=-1;
 		}
-		afficheBilan(bilan2,afd.tailleQ);
 
 		//On rempli bilan2
 		indexBilan=0;
@@ -1027,16 +1024,13 @@ AUTOMATEAFD minimisation(AUTOMATEAFD afd){
 				//On cherche les autres cases qui auront le meme index
 				for(j=i+1;j<afd.tailleQ;j++){
 					if(bilan1[i]==bilan1[j]){
-						printf("case de bilan1[%d] et bilan1[%d] identique\n",i,j);
 						//On regarde si les cases de transitions sont identiques
 						for(k=0;k<strlen(afd.Z);k++){
 							if(transitionsTmp[k][i]!=transitionsTmp[k][j]){
-								printf("transitionsTmp[%d][%d] et transitionsTmp[%d][%d] pasidentiques\n",k,i,k,j );
 								break; //on arrete la for sur k
 							}
 
 							if(k==strlen(afd.Z)-1){
-								printf("Les attributs de i:%d et j:%d sont identiques\n",i,j);
 								//On met a la case j le meme index que i
 								bilan2[j]=indexBilan;
 							}
@@ -1048,34 +1042,164 @@ AUTOMATEAFD minimisation(AUTOMATEAFD afd){
 			}
 			
 		}
-		afficheBilan(bilan2,afd.tailleQ);
 
 		bilanEgaux=1;
 		//Comparaison des bilans
+		compteurComparaison++;
 		for(i=0;i<afd.tailleQ;i++){
 			//printf("comparaison des bilans\n");
 			if(bilan1[i]!=bilan2[i]){//un element ne correspond pas
-				printf("bilan differents\n");
 				bilanEgaux=0;
 				//On met bilan2 dans bilan1
 				for(j=0;j<afd.tailleQ;j++){
 					bilan1[j]=bilan2[j];
 				}
-				afficheBilan(bilan1,afd.tailleQ);
 				break;
 			}
 		}
 		
 	}
-
-	printf("Bilan final\n");
-	afficheBilan(bilan2,afd.tailleQ);
 	
 	/** Remplissage de afdMin **/
+	if(compteurComparaison==1){ //Si l'afd en entrée est deja minimisé on renvoie sa copie
+		afdMin=copie_afd(afd);
+	}else{ //Sinon on le recreer a partir du bilan
+		//Creation de Q
+		//Allocation de Q
+		afdMin.tailleQ = indexBilan; //a chaque ajout d'un etat dans le bilan, on l'incremente (on ne compte pas le dernier ajout)
+		afdMin.Q = (unsigned int*)malloc(sizeof(unsigned int)*afdMin.tailleQ);
+		for(i=0;i<afdMin.tailleQ;i++){
+			afdMin.Q[i]=i;
+		}
 
+		//Creation de Z
+		//Allocation de Z
+		afdMin.Z = (char*)malloc(sizeof(char));
+		//L'alphabet est inchange
+		strcpy(afdMin.Z,afd.Z);
 
-	//free des tableaux
+		//Creation de s (inchange)
+		afdMin.s = afd.s;
 
+		//Creation de F
+		//Allocation de F (au maximum on a autant d'etats accepteurs qu'avant la minimisation)
+		afdMin.tailleF = afd.tailleF;
+		afdMin.F = (int*)malloc(sizeof(int)*afdMin.tailleF);
+
+		//tableau des etats
+		etatsTmp=(int*)malloc(sizeof(int)*afd.tailleQ);
+		
+		//init du tableau a 0
+		for(i=0;i<afd.tailleQ;i++){
+			suiviBilan[i]=0;
+		}
+
+		//on recherche tous les etats du bilans qui sont egaux:
+		for(i=0;i<afd.tailleQ;i++){
+			if(suiviBilan[i]==0){ //si la case du bilan n'a pas ete traitee
+				
+				//init de etatsTmp a -1
+				for(j=0;j<afd.tailleQ;j++){
+					etatsTmp[j]=-1;
+				}
+				indexEtatsTmp=0;
+				//on ajoute l'etat de la case bilan qu'on regarde
+				etatsTmp[indexEtatsTmp]=afd.Q[i];
+				indexEtatsTmp++;
+				//On recherches ceux qui sont egaux a cet etat
+				for(j=i+1;j<afd.tailleQ;j++){
+					present=0;
+					if(bilan2[i]==bilan2[j]){
+						//On regarde si l'etat est deja dans etatsTmp
+						for(k=0;k<afd.tailleQ;k++){
+							if(afd.Q[j]==etatsTmp[k]){
+								present=1;
+							}
+						}
+						//on ajoute l'etat au tableau s'il n'y est pas
+						if(!present){
+							etatsTmp[indexEtatsTmp]=afd.Q[j];
+							indexEtatsTmp++;
+						}
+					}
+					
+
+					
+				}
+				//On regarde pour tous les etats de etatsTmp utilisés, si l'un deux est final
+				final=0;
+				for(j=0;j<indexEtatsTmp;j++){
+					//On dit qu'on a traiter cet etat
+					suiviBilan[etatsTmp[j]]=1;
+
+					for(m=0;m<afd.tailleF;m++){
+
+						if(etatsTmp[j]==afd.F[m]){
+							final=1;
+							break;
+						}
+					}
+				}
+
+				//Si l'un des etats est final
+				if(final){ //on met l'etat correspondant a final
+					afdMin.F[indexF]=bilan2[i];
+					indexF++;
+				}
+
+				//affiche suiviBilan
+
+			}
+			
+		}
+
+		//On realloue afdMin.F a la bonne taille
+		afdMin.tailleF = indexF;
+		afdMin.F = (int*)realloc(afdMin.F,sizeof(int)*afdMin.tailleF);
+
+		//Creation de Delta
+		//On alloue delta au maximum
+		afdMin.tailleDelta = afd.tailleDelta;
+		afdMin.Delta = (TRANSITION*)malloc(sizeof(TRANSITION)*afdMin.tailleDelta);
+
+		//Pour toutes les cases du bilan, on va ecrire les transitions de transitionsTmp si on change d'etat
+		for(i=0;i<afd.tailleQ;i++){
+			if(dernierEtat!=bilan2[i]){
+				//On regarde les transitions de cet etat
+				for(j=0;j<strlen(afd.Z);j++){
+
+					if(transitionsTmp[j][i] !=-1){//Si on a une transition
+						//On ajoute cette transition
+						afdMin.Delta[indexDelta].depart = bilan2[i];
+						afdMin.Delta[indexDelta].caractere = afd.Z[j];
+						afdMin.Delta[indexDelta].arrivee = transitionsTmp[j][i];
+						indexDelta++;						
+					}
+				}
+
+			}
+			//on met a jour le dernierEtat que l'on vient de traier
+			dernierEtat=bilan2[i];
+
+		}
+
+		//On realloue Delta a la bonne taille
+		afdMin.tailleDelta = indexDelta;
+		afdMin.Delta = (TRANSITION*)realloc(afdMin.Delta,sizeof(TRANSITION)*afdMin.tailleDelta);
+
+	}
+
+	/** free des tableaux **/
+	//Allocation des variables temporaires
+	for(i=0;i<strlen(afd.Z);i++){
+		free(transitionsTmp[i]);
+	}
+
+	free(transitionsTmp);
+	free(bilan1);
+	free(bilan2);
+	free(suiviBilan);
+	free(etatsTmp);
 
 	return afdMin;
 }
@@ -1217,7 +1341,7 @@ void free_afn(AUTOMATEAFN afn){
 	}	
 }
 
-//Copie d'un automate
+//Copie d'un automate fini non deterministe
 AUTOMATEAFN copie(AUTOMATEAFN afn){
 	AUTOMATEAFN afn_copie;
 	int i;
@@ -1389,4 +1513,44 @@ int verif_ajout_non_present(int* arrivee, int tailleArrivee, int ajout){
 	}
 
 	return verif;
+}
+
+//Copie d'un automate fini deterministe
+AUTOMATEAFD copie_afd(AUTOMATEAFD afd){
+	AUTOMATEAFD afd_copie;
+	int i;
+
+	//copie de Q
+	afd_copie.tailleQ = afd.tailleQ;
+	afd_copie.Q = (unsigned int*)malloc(sizeof(unsigned int)*afd_copie.tailleQ);
+	
+	for (i=0;i<afd_copie.tailleQ;i++){
+		afd_copie.Q[i] = afd.Q[i];
+	}
+
+	//copie de Z
+	afd_copie.Z = (char*)malloc(sizeof(char));
+	strcpy(afd_copie.Z,afd.Z);
+
+	//copie de s
+	afd_copie.s = afd.s;
+
+	//copie de F
+	afd_copie.tailleF = afd.tailleF;
+	afd_copie.F = (int*)malloc(sizeof(int)*afd_copie.tailleF);
+	
+	for (i=0;i<afd_copie.tailleF;i++){
+		afd_copie.F[i] = afd.F[i];
+	}
+	//copie de Delta
+	afd_copie.tailleDelta = afd.tailleDelta;
+	afd_copie.Delta = (TRANSITION*)malloc(sizeof(TRANSITION)*afd.tailleDelta);
+
+	for (i=0;i<afd_copie.tailleDelta;i++){
+		afd_copie.Delta[i].depart = afd.Delta[i].depart;
+		afd_copie.Delta[i].caractere = afd.Delta[i].caractere;
+		afd_copie.Delta[i].arrivee = afd.Delta[i].arrivee;
+	}
+
+	return afd_copie;
 }
