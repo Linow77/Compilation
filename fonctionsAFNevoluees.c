@@ -58,7 +58,7 @@ AUTOMATEAFN unionDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	//réallocation de Q
 	afn.Q = (unsigned int *) realloc( afn.Q, afn.tailleQ * sizeof(unsigned int) );
 
-	//ajout des états de afn2 dans afn1.Q
+	//ajout des états de afn2 dans afn
 	for(i=0; i<afn2.tailleQ; i++){ //on ne récupère pas l'etat initial de afn2
 		if(afn2.Q[i]!=0){
 			afn.Q[afn1.tailleQ-1+i] = afn2.Q[i]+afn1.tailleQ-1; //on incremente les etats de afn2 avec les etats de afn1
@@ -138,18 +138,18 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	int i,j,verifCaractere;
 
 	//Q
-	automateConcatene.tailleQ = afn1.tailleQ + afn2.tailleQ - 1; //On retire l'etat initial de afn2
+	automateConcatene.tailleQ = afn1.tailleQ + afn2.tailleQ - 1; //-1 car on retire l'etat initial de afn2
 	//allocation de Q
 	automateConcatene.Q = (unsigned int *) malloc(automateConcatene.tailleQ * sizeof(unsigned int));
 
-	//ajout des états de afn2 dans afn1.Q
-	for(i=0; i<=automateConcatene.tailleQ; i++){ //<= car quand on rencontre l'etat 0, on n'ajoute pas d'etat
+	//ajout des états de afn1 et afn2
+	for(i=0; i<=automateConcatene.tailleQ; i++){ 
 		if(i<afn1.tailleQ) //on mets tous les etats de afn1
 		{
 			automateConcatene.Q[i] = afn1.Q[i];
-		}else{
+		}else{ //Ensuite
 			if(afn2.Q[i-afn1.tailleQ]!=0){	//on ne récupère pas l'état initial de afn2
-				automateConcatene.Q[i-1] = afn2.Q[i-afn1.tailleQ] +afn1.tailleQ-1; 
+				automateConcatene.Q[i-1] = afn2.Q[i-afn1.tailleQ] +afn1.tailleQ-1;  //on incremente les etats de afn2 avec les etats de afn1
 			}
 		}
 		
@@ -161,9 +161,9 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	char* Ztemp = (char*)malloc(sizeof(char)*(strlen(afn1.Z)+strlen(afn2.Z)));
 	strcpy(Ztemp,afn1.Z); //copie de afn1.Z dans Ztemp
 
-	//Determinisation des nouveaux caracteres
+	//Pour trouver les acractères d el'alphabet de afn2
 	for(i=0;i<strlen(afn2.Z);i++){		//Pour chaque caractere de afn2
-		verifCaractere=0; //on a pas trouvé le caractère
+		verifCaractere=0; //on a pas encore trouvé le caractère
 		for(j=0;j<strlen(afn1.Z);j++){	//Est il deja present dans afn1
 			if(!verifCaractere){ //si on a trouvé le caractère pas besoin de continuer de le chercher
 				if(afn2.Z[i]==afn1.Z[j]){ 	//Si oui on passe au prochain caractere de afn2
@@ -178,7 +178,7 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 		}
 	}
 
-	//On modifie automateConcatene.Z par Ztemp
+	//On modifie automateConcatene.Z grace a Ztemp
 	automateConcatene.Z = (char*)realloc(automateConcatene.Z,strlen(Ztemp)*sizeof(char));
 	strcpy(automateConcatene.Z,Ztemp);
 
@@ -208,13 +208,13 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 		{
 			if(i<afn1.tailleF)
 			{
-				automateConcatene.F[i] = afn1.F[i];//on remplit avec les etats finaux
+				automateConcatene.F[i] = afn1.F[i];//on remplit avec les etats finaux de afn1
 			}
-			else 
+			else //ensuite on mets les etats finaux de afn2
 			{
 				if(afn2.F[k]!= 0)// si ce n'est pas l'etat 0 de afn2 alors on met l'etat
 				{
-					automateConcatene.F[i] = afn2.F[k] + afn1.tailleQ -1;
+					automateConcatene.F[i] = afn2.F[k] + afn1.tailleQ -1; 
 
 				}else{
 					i--;
@@ -269,12 +269,12 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 			automateConcatene.D[i].arrivee = afn1.D[i].arrivee;
 			i++;
 		}
-		else //on rajoute les nvelles transitions
+		else //on rajoute les nouvelles transitions
 		{
 	
 			for(k=0;k<afn2.tailleD;k++)  //on parcours les transitions de afn2
 			{
-				if (afn2.D[k].depart==0){
+				if (afn2.D[k].depart==0){ //si on une transition qui part de 0, on doit l'ajouter sauf qu'elle doit partir d'un etat final de afn1
 				
 					for(j=0;j<afn1.tailleF;j++)  //pour tous les etats accepteurs de afn1
 					{
@@ -284,7 +284,7 @@ AUTOMATEAFN concatenationDeDeuxAutomates(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 						i++;
 					}
 
-				}else{
+				}else{ //sinon on met la transition tel quel
 					automateConcatene.D[i].depart = afn2.D[k].depart + afn1.tailleQ -1;
 					automateConcatene.D[i].caractere = afn2.D[k].caractere;
 					automateConcatene.D[i].arrivee = afn2.D[k].arrivee + afn1.tailleQ -1;
@@ -337,7 +337,7 @@ AUTOMATEAFN kleene(AUTOMATEAFN afn){
 				automateKleene.F[i] = afn.F[i];
 			}
 		}
-		else//sinon on augùente la taille de 1 pour qu'elle prenne l'etat initial
+		else//sinon on augmente la taille de 1 pour qu'elle prenne l'etat initial
 		{
 			automateKleene.tailleF = afn.tailleF+1;
 			automateKleene.F = (int*) malloc(automateKleene.tailleF *sizeof(int));
@@ -353,33 +353,32 @@ AUTOMATEAFN kleene(AUTOMATEAFN afn){
 	//D
 
 	//Calcul de la taille de D
-	unsigned int cmpS2 = 0;//nbre d'etat qui partent de s2
+	unsigned int cmpS = 0;//nbre de transition qui partent de s
 
 	for(i=0; i< afn.tailleD; i++)
 	{	
-		//strcpy(tmp,afn.D[i]);
-		if(afn.D[i].depart == 0) //si on trouve une transition qui part de s2
+		if(afn.D[i].depart == 0) //si on trouve une transition qui part de s
 			{
-				cmpS2++; //nbre etats qui sortent de s2
+				cmpS++; //nbre de transitions qui partent de s ++ 
 			}
 		
 	}
 
-	if(verif_s==1)
+	if(verif_s==1)//si afn.s etait deja accepteur
 	{
-			automateKleene.tailleD = afn.tailleD + ((afn.tailleF-1)*cmpS2);
+			automateKleene.tailleD = afn.tailleD + ((afn.tailleF-1)*cmpS);
 	}
-	else{
-			automateKleene.tailleD = afn.tailleD + (afn.tailleF*cmpS2);
+	else{ //sinon 
+			automateKleene.tailleD = afn.tailleD + (afn.tailleF*cmpS);
 	}
 
 	//Allocation de D
-	automateKleene.D =(TRANSITION *) malloc(sizeof(TRANSITION)*automateKleene.tailleD); //remplit tab d'etat que je peux avoir depuis s2
+	automateKleene.D =(TRANSITION *) malloc(sizeof(TRANSITION)*automateKleene.tailleD);
 
 	//remplissage de D
 	for(i=0;i<automateKleene.tailleD;i+=0)
 	{
-		if(i<afn.tailleD) //on met d'abord toutes les transitions de afn
+		if(i<afn.tailleD) //on met d'abord toutes les transitions de l'afn de base 
 		{
 			automateKleene.D[i].depart = afn.D[i].depart;
 			automateKleene.D[i].caractere = afn.D[i].caractere;
@@ -389,13 +388,13 @@ AUTOMATEAFN kleene(AUTOMATEAFN afn){
 		else //on rajoute les nvelles transitions
 		{
 	
-			for(k=0;k<afn.tailleD;k++)  //on parcours les transitions de afn2
+			for(k=0;k<afn.tailleD;k++)  //on parcours les transitions de afn
 			{
 				if(afn.D[k].depart == 0){
 
 					for(j=0;j<afn.tailleF;j++)  //pour tous les etats accepteurs de afn
 					{
-						if(afn.F[j]!=0){
+						if(afn.F[j]!=0){//on ajoute les transitions
 							automateKleene.D[i].depart = afn.F[j];
 							automateKleene.D[i].caractere = afn.D[k].caractere;
 							automateKleene.D[i].arrivee = afn.D[k].arrivee;
@@ -519,6 +518,7 @@ int afn_identique(AUTOMATEAFN afn1, AUTOMATEAFN afn2){
 	return 1; //si tout est identique
 }
 
+//Liberer un afn
 void free_afn(AUTOMATEAFN afn){
 	//Q
 	free(afn.Q);

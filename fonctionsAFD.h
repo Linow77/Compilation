@@ -39,12 +39,11 @@ AUTOMATEAFD minimisation(AUTOMATEAFD afd); //prend un automate fini determinisit
 
 /** Fonctions Annexes **/
 void AfficherAutomateDeterministe(AUTOMATEAFD afn); //permet d'afficher le contenu d'un automate standard deterministe
-void tri(int* T, int ligne); //Fonction de tri pas rapide
+void tri(int* T, int ligne); //Fonction de tri rapide
 void affiche_determinisation(TABETATS * etats, int tailleEtat); //affiche le tableau des etats suite a la determinisation
 void affiche_transitions(TRANSITIONDETERMINISTE** transitions,int tailleEtat, int tailleZ); //afficher le tableau transitions
 int verif_ajout_non_present(int* arrivee, int tailleArrivee, int ajout); //verifie si la valeur ajout est presente dans le tableau arrivee
-void afficheBilan(int* bilan, int taille);
-AUTOMATEAFD copie_afd(AUTOMATEAFD afd);
-void free_afd(AUTOMATEAFD afd);
+AUTOMATEAFD copie_afd(AUTOMATEAFD afd); //Copie d'un automate fini deterministe
+void free_afd(AUTOMATEAFD afd); //Libere le contenu d'un afd
 
 #endif

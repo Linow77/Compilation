@@ -2,13 +2,14 @@
 
 /**AUTOMATE FINI DETERMINISTES **/
 AUTOMATEAFD determinisation(AUTOMATEAFN afn){
+
+	/**Creation des variables **/
 	AUTOMATEAFD afd; //automate que l'on retourne
 
 	unsigned int i,j,k,z,y,m;
 	unsigned int tailleEtat=1;
 	
 	unsigned int etatDejaVu = 0; //0 = jamais vu
-	unsigned int cpt=0;
 
 	/** Creation des tableaux etats et transitions **/
 	//allocation de transitions
@@ -20,8 +21,8 @@ AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 		for(j=0;j<strlen(afn.Z);j++){
 			transitions[i][j].tailleArrivee = 1;
 			transitions[i][j].arrivee = (int*)malloc(sizeof(int)*transitions[i][j].tailleArrivee);
-			//init a -1 des transitions 
-			transitions[i][j].arrivee[0] = -1;
+			//init a -1 la premiere case d'arrivee de chaque transitions
+			transitions[i][j].arrivee[0] = -1; 
 		}		
 	}
 	
@@ -31,119 +32,79 @@ AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 	for (i=0;i<tailleEtat;i++){
 		etats[i].tailleColonne=1;
 		etats[i].colonne=(unsigned int*)malloc(sizeof(unsigned int)*etats[i].tailleColonne);
-
-		
 	}
+
 	//init du premier etat avec 0
-	etats[0].colonne[0]=0; //1er etat 
+	etats[0].colonne[0]=0; //On commence avec l'etat de depart
 
 	for(i=0;i<tailleEtat;i++){	//Pour toutes les cases de etats
-		//printf("i:%d\n",i );
 		for(j=0;j<etats[i].tailleColonne;j++) //Pour tous les elements de chaque cases de etats
 		{
-			//printf("\nLa colonne etudié est de taille:%d",etats[i].tailleColonne);
-
 			for(z=0;z<strlen(afn.Z);z++){		//Pour toutes les lettres de l'alphabet
-				
-
 				transitions[i][z].depart = etats[i].colonne[j]; //on prend le premier etat de etats
 				transitions[i][z].caractere = afn.Z[z];			//on prend le premier caractere de Z
-				
-
-				for(k=0;k<afn.tailleD;k++){				//Pour toutes les transitions de l'afn
-					//printf("\ni:%d et j:%d et k:%d et z:%d -- etat :%d\n", i,j,k,z,etats[i].colonne[j]);
-					//printf("Depuis l'etat:%d avec le caractere :%c \n",transitions[i][z].depart,transitions[i][z].caractere);
-					//printf("Evaluation de la transition afn.D[%d]=%d%c%d\n",k,afn.D[k].depart,afn.D[k].caractere,afn.D[k].arrivee);
-					//printf("transition avant modif:%d\n",transitions[i][z].arrivee[transitions[i][z].tailleArrivee-cpt-1]);
-					//printf("transitions.tailleArrivee:%d\n",transitions[i][z].tailleArrivee);
-					
-
+			
+				for(k=0;k<afn.tailleD;k++){		//Pour toutes les transitions de l'afn
 					if(afn.D[k].depart == transitions[i][z].depart &&	//Si la transition afn.D[k] part du meme etat que l'etat[i].colonne[j] que l'on evalue
 						afn.D[k].caractere == transitions[i][z].caractere){	//Si la transition afn.D[k] a le meme caractere que celui evalue actuellement (afn.Z[z])
 
 						//On ajoute l'etat d'arrivee dans le tableau transition s'il n'y est pas déja
 						if(verif_ajout_non_present(transitions[i][z].arrivee, transitions[i][z].tailleArrivee, afn.D[k].arrivee)){
-							// On realloue une nouvelle case dans les transitions pour la suite
+							// On realloue le bon nombre de case dans les transitions pour pouvoir en rajouter une
 							if(transitions[i][z].tailleArrivee!=1){ //la 1ere case est alloué de base, pour les autres il faut les allouer avant d'ajouter l'etat
-								//printf("allocation d'une nouvelle case\n");
 								//realloue arrivee transitions
 								transitions[i][z].arrivee = (int*)realloc(transitions[i][z].arrivee,sizeof(int)*transitions[i][z].tailleArrivee);
 								transitions[i][z].arrivee[transitions[i][z].tailleArrivee]=-1;
 							}
-
 							//ajout de l'etat
 							transitions[i][z].arrivee[transitions[i][z].tailleArrivee-1] = afn.D[k].arrivee;
-
-							//printf("Ajout de l'etat %d dans transitions[%d][%d].arrivee[%d]\n",afn.D[k].arrivee,i,z,transitions[i][z].tailleArrivee-1)	;	
-							
-							//printf("transition apres:%d\n",transitions[i][z].arrivee[transitions[i][z].tailleArrivee-1]);
-
 							//on incremente la taille du tableau arrivee pour pouvoir ajouter un nouvel element
 							transitions[i][z].tailleArrivee++; //On prévoit le prochain ajout
-							cpt++;
-						}else{
-							//printf("l'etat est deja dans la case transition\n");
 						}
-
-					}else{
-
-						//printf("transition apres:%d\n",transitions[i][z].arrivee[transitions[i][z].tailleArrivee-cpt-1]);
 					}
-
 				}
-				//On a regardé toutes les transitions depuis 
+				//On a regardé toutes les transitions depuis l'etat qu'on evalue
+				//On tri nos cases pour pouvoir verifier plus facilement si on l'a deja dans nos etats
 				tri(transitions[i][z].arrivee,transitions[i][z].tailleArrivee-1);
-				//affiche_transitions(transitions,tailleEtat, strlen(afn.Z));
 
 				//On ajoute lorsque l'on a fini d'etudier chaque elements de la case etats[i] donc tous les j
 				if(j==etats[i].tailleColonne-1){ 	
 					/** traitement de l'ajout de la case transition[i][z] dans la case etats[i]**/
-					//printf("premier etat:%d\n",transitions[i][z].arrivee[0]);
 					if(transitions[i][z].arrivee[0]!=-1){ //Si le premier element de transition vaut -1, on a pas trouvé d'etat d'arrivee
+
+						//On regarde si l'element que l'on veut ajouter n'est pas deja dans nos etats
 						etatDejaVu = 0; //0 = jamais vu
 						for(y=0;y<tailleEtat;y++){	//Pour tous les etats de etats
 							//on compare la taille de la case etats[y] avec la taille de la case transitions qu'on veut ajouter
-							//printf("on regarde si tailleEtat:%d == tailleArrivee:%d\n",etats[y].tailleColonne,transitions[i][z].tailleArrivee-1);
+							//si la taille n'est pas la meme ils sont forcement differents
 							if(etats[y].tailleColonne == (transitions[i][z].tailleArrivee-1)){ //Si taille egale 
-								//printf("taille egale\n");
 								for(m=0;m<etats[y].tailleColonne;m++) //Pour tous les elements de chaque case de etats[y]
 								{	
-									//printf("iteration m:%d  on va comparer :%d et %d\n",m,etats[y].colonne[m],transitions[i][z].arrivee[m]);
-
 									if(etats[y].colonne[m]==transitions[i][z].arrivee[m]){ //si l'element m de etats[y].colonne[m] est le meme 
 																						   //que l'element m de la transition que l'on veut ajouter
-										//printf("element m:%d correspond et transitions[i][z].tailleArrivee-1:%d\n",m, transitions[i][z].tailleArrivee-1);
-
 										if(m+1==transitions[i][z].tailleArrivee-1){
 											etatDejaVu = 1;
-											//printf("tous les elements de la case etats[%d].colonne correspondent a la case transitions[%d)[%d].arrivee\n",y,i,z);
 										}
-
 									}else{
-										//printf("la case m:%d ne correspond pas on va a la case etats[y+1] si y+1<tailleEtat\n",m);
 										break; //termine la for sur m --> on passe a y+1
 									}
 								}
 							}
-							
 						}
-
-						//printf("/**AJOUT DE LA CASE si dejavu:%d == 0**/\n", etatDejaVu);
+						//S'il la case n'est pas deja dans nos etats
 						if(!etatDejaVu){
 							//On ajoute la case de transition[i][z] a la prochaine case de etats[]
 							tailleEtat++; 
-							//printf("tailleEtat:%d\n",tailleEtat);
+
 							//On alloue la nouvelle case de etats
 							etats = (TABETATS*)realloc(etats,sizeof(TABETATS)*tailleEtat);
 							//on donne a la nouvelle case la taille de la case de transition que l'on va ajouter
 							etats[tailleEtat-1].tailleColonne=transitions[i][z].tailleArrivee-1; //on a tailleArrivee qui a une case supplementaire (pour un prochain ajout)
 
-							//printf("Taille de la case a ajouter:%d\n",etats[tailleEtat-1].tailleColonne);
 							//On alloue sa colonne
 							etats[tailleEtat-1].colonne=(unsigned int*)malloc(sizeof(unsigned int)*etats[tailleEtat-1].tailleColonne);
 
 							//on alloue la nouvelle colonne de transitions corespondant a l'etude du nouvel etat
-							//printf("j'alloue une nouvelle colonne de transitions\n");
 							transitions = (TRANSITIONDETERMINISTE **)realloc(transitions,sizeof(TRANSITIONDETERMINISTE*)*tailleEtat);  //lignes
 							transitions[tailleEtat-1] = (TRANSITIONDETERMINISTE*)malloc(sizeof(TRANSITIONDETERMINISTE)*strlen(afn.Z)); //colonnes
 
@@ -155,42 +116,28 @@ AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 								transitions[tailleEtat-1][y].arrivee[0] = -1;
 							}
 									
-
 							//on ajoute les transitions d'arrivees dans la nouvelle case
-							//avant on trie les transitions pour ne pas créer des doublons tel que (4,1) et (1,4) 
-							//tri(transitions[i][z].arrivee,transitions[i][z].tailleArrivee-1);
-
 							for (y=0;y<etats[tailleEtat-1].tailleColonne;y++){
-								/** avant d'ajouter verifier si pas deja present --> effectuer grace au tri*/
-								//printf("y:%d cas arret:%d\n",y,etats[tailleEtat-1].tailleColonne);
 								//ajout des arrivee dans le nouvel etat
 								etats[tailleEtat-1].colonne[y]=transitions[i][z].arrivee[y];
-								//printf("ajout de %d sur etats[%d].colonne[%d]=%d\n", transitions[i][z].arrivee[y],tailleEtat-1,y,etats[tailleEtat-1].colonne[y]);
-								
 							}
-							
 						}
 					}else{
 						transitions[i][z].tailleArrivee++;
-					}
-
-					
-					
-				}
-				
-			}
-				
-			
-		}
-		//affiche_determinisation(etats, tailleEtat);
-		cpt=0;
-			
+					}	
+				}	
+			}			
+		}			
 	}
-	affiche_determinisation(etats, tailleEtat);
-	affiche_transitions(transitions,tailleEtat, strlen(afn.Z));
+
+	/**Permet d'afficher les etats obtenus via la determinisation**/
+	//affiche_determinisation(etats, tailleEtat);
+
+	/**Permet d'afficher les transitions obtenus via la determinisation**/
+	//affiche_transitions(transitions,tailleEtat, strlen(afn.Z));
 
 
-	/**Remplissage de AFD **/
+	/**Remplissage de l'AFD **/
 	//Creation de Q
 	afd.tailleQ = tailleEtat;
 	//allocation de Q
@@ -210,6 +157,7 @@ AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 	//Creation de F
 	//Un etat i de afd est final si l'un de ses etats dans afn l'etait
 	int dejaPresent=0;
+
 	//Allocation de F au maximum
 	afd.F = (int*)malloc(sizeof(int)*afn.tailleQ);
 	afd.tailleF=0;
@@ -219,10 +167,10 @@ AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 		afd.F[i]=-1;
 	}
 
+	//On cherche a savoir si les nouveaux etats sont finaux
 	for(i=0;i<tailleEtat;i++){//pour toutes les cases de etats
 		
 		for(j=0;j<etats[i].tailleColonne;j++){//pour tous les etats de chaque cases etats
-		//Pour tous les etats accepteurs de afn
 			for(k=0;k<afn.tailleF;k++){ //pour tous les etats accepteurs de afn
 				//si un etat de etats[i].colonne est final alors i est final dans afd
 				if(etats[i].colonne[j]==afn.F[k]){
@@ -245,7 +193,7 @@ AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 		dejaPresent=0;
 	}
 
-	//realloue F a la bonne taille
+	//On realloue F a la bonne taille
 	afd.F = (int*)realloc(afd.F,sizeof(int)*afd.tailleF-1);
 			
 	//Creation de Delta
@@ -254,51 +202,37 @@ AUTOMATEAFD determinisation(AUTOMATEAFN afn){
 	afd.Delta = (TRANSITION*)malloc(sizeof(TRANSITION)*(strlen(afn.Z)*tailleEtat));
 	afd.tailleDelta = 0;
 
-	for(i=0;i<tailleEtat;i++){ 
-		for(j=0;j<strlen(afn.Z);j++){
+	for(i=0;i<tailleEtat;i++){  //pour tous les etats
+		for(j=0;j<strlen(afn.Z);j++){	//pour tous les caracteres
 			afd.Delta[afd.tailleDelta].depart = afd.Q[i]; 	//le depart est l'etat que l'on regarde dans nos nouveaux etats Q
 			afd.Delta[afd.tailleDelta].caractere = transitions[i][j].caractere;
 
 			//on cherche quel etat dans nos nouveaux etats, representent les arrivees  
-			for(k=1;k<tailleEtat;k++){ //Dans toutes les cases de etats sauf la premiere
+			for(k=1;k<tailleEtat;k++){ //Dans toutes les cases de etats sauf la premiere 
 				//on verifie que la premiere case ne contient pas -1
 				//on compare la taille des cases
-					if(transitions[i][j].tailleArrivee-1 == etats[k].tailleColonne){
-						etatDejaVu = 0; //0 = jamais vu
-						//On compare chaque elements entre eux
-						for(y=0;y<etats[k].tailleColonne;y++){ //Dans tous les etats de chaque case
-						
-							if(transitions[i][j].arrivee[y]==etats[k].colonne[y]){
-								if(y+1==transitions[i][j].tailleArrivee-1){
-									etatDejaVu = 1;
-									afd.Delta[afd.tailleDelta].arrivee = afd.Q[k];
-
-									//printf("**Transitions**\n");
-									//printf("%d%c%d\n",afd.Delta[afd.tailleDelta].depart,afd.Delta[afd.tailleDelta].caractere,afd.Delta[afd.tailleDelta].arrivee );
-
-									afd.tailleDelta++;
-
-										
-
-								}
-							}else{
-								break; //termine la for sur y --> on passe a k+1
+				if(transitions[i][j].tailleArrivee-1 == etats[k].tailleColonne){
+					etatDejaVu = 0; //0 = jamais vu
+					//On compare chaque elements entre eux
+					for(y=0;y<etats[k].tailleColonne;y++){ //Dans tous les etats de chaque case
+					
+						if(transitions[i][j].arrivee[y]==etats[k].colonne[y]){
+							if(y+1==transitions[i][j].tailleArrivee-1){
+								etatDejaVu = 1;
+								afd.Delta[afd.tailleDelta].arrivee = afd.Q[k];
+								afd.tailleDelta++;
 							}
+						}else{
+							break; //termine la for sur y --> on passe a k+1
 						}
 					}
-
-			}
-
-		
+				}
+			}	
 		}
 	}
 
 	//reallocation de Delta la bonne taille
 	afd.Delta = (TRANSITION*)realloc(afd.Delta,sizeof(TRANSITION)*afd.tailleDelta);
-
-	
-
-
 
 	/**free des tableaux **/
 	//free de transitions
@@ -748,7 +682,7 @@ void affiche_determinisation(TABETATS * etats, int tailleEtat){
 	printf("]\n");
 }
 
-//affiche transitions A CHANGER
+//affiche transitions
 void affiche_transitions(TRANSITIONDETERMINISTE** transitions,int tailleEtat, int tailleZ){
 	int i,j,y;
 	printf("/*** Transitions ***/\n");
@@ -766,6 +700,7 @@ void affiche_transitions(TRANSITIONDETERMINISTE** transitions,int tailleEtat, in
 	}
 }
 
+//verifie si la valeur ajout est presente dans le tableau arrivee
 int verif_ajout_non_present(int* arrivee, int tailleArrivee, int ajout){
 	int i;
 	int verif=1;
@@ -780,16 +715,6 @@ int verif_ajout_non_present(int* arrivee, int tailleArrivee, int ajout){
 	}
 
 	return verif;
-}
-
-void afficheBilan(int* bilan, int taille){
-	int i;
-	printf("Bilan:\t");
-	for(i=0;i<taille;i++){
-		printf("%d ",bilan[i] );
-
-	}
-	printf("\n");
 }
 
 //Copie d'un automate fini deterministe
@@ -832,6 +757,7 @@ AUTOMATEAFD copie_afd(AUTOMATEAFD afd){
 	return afd_copie;
 }
 
+//Libere le contenu d'un afd
 void free_afd(AUTOMATEAFD afd){
 	//Q
 	free(afd.Q);
