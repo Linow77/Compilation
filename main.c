@@ -4,7 +4,7 @@
 
 int main() {
 
-	AUTOMATEAFN afnVide,afnMotVide,afncaractere1,afncaractere2, afnUnion, afnConcatene,afnKleene,afnConcatene2;
+	AUTOMATEAFN afnVide,afnMotVide,afncaractere1,afncaractere2, afnUnion, afnConcatene,afnKleene;
 	AUTOMATEAFD afd;
 	char* mot;
 	unsigned int motReconnu;
@@ -34,65 +34,41 @@ int main() {
 	printf("\n/**** Langage Union ****/\n");
 	AfficherAutomateNonDeterministe(afnUnion);
 
-	//Creer l'AFN qui reconnait la concatenation des deux langages donnes en parametre (ici a et a)
-	afnConcatene = concatenationDeDeuxAutomates(afncaractere1,afncaractere1);
-	printf("\n/**** Langage Concatené ****/\n");
-	AfficherAutomateNonDeterministe(afnConcatene);
-
 	//Creer l'AFN qui reconnait la fermeture iterative de Kleene du langage donne en parametre (ici a)
 	afnKleene = kleene(afncaractere1);
 	printf("\n/**** Version Kleene sur langagecaractere1 ****/\n");
 	AfficherAutomateNonDeterministe(afnKleene);
 
-	//Creer l'AFD qui reconnait le meme langage que l'AFN donne en parametre
-	afd = determinisation(afnConcatene);
-	printf("\n/**** AFD ****/\n");
-	AfficherAutomateDeterministe(afd);
-
-	/** A ENLEVER */
-
-    afnUnion = unionDeDeuxAutomates(afncaractere1,afncaractere2);
-	printf("\n/**** Langage Union ****/\n");
-	AfficherAutomateNonDeterministe(afnUnion);
-
-	afnConcatene2 = concatenationDeDeuxAutomates(afncaractere1,afncaractere2);
-	printf("\n/**** Langage Concatené ****/\n");
-	AfficherAutomateNonDeterministe(afnConcatene2);
-
-	afnUnion = unionDeDeuxAutomates(afnConcatene,afnConcatene2);
-	printf("\n/**** Langage Union ****/\n");
-	AfficherAutomateNonDeterministe(afnUnion);
-
-	afnConcatene = concatenationDeDeuxAutomates(afnUnion,afnConcatene2);
+	//Creer l'AFN qui reconnait la concatenation des deux langages donnes en parametre (ici a et a)
+	afnConcatene = concatenationDeDeuxAutomates(afncaractere1,afncaractere1);
 	printf("\n/**** Langage Concatené ****/\n");
 	AfficherAutomateNonDeterministe(afnConcatene);
 
-	afd = determinisation(afnConcatene);
+	/** Exemple pour la minimisation **/
+	afnKleene = kleene(afnConcatene);
+	printf("\n/**** Version Kleene sur langagecaractere1 ****/\n");
+	AfficherAutomateNonDeterministe(afnKleene);
+
+	//Creer l'AFD qui reconnait le meme langage que l'AFN donne en parametre
+	afd = determinisation(afnKleene);
 	printf("\n/**** AFD ****/\n");
 	AfficherAutomateDeterministe(afd);
-
-	afd = minimisation(afd);
-	printf("\n/**** AFD Minimise****/\n");
-	AfficherAutomateDeterministe(afd);
-
-	/**Fin a enlever **/
 
 	//Creer l'AFD minimal qui reconnait le meme langage que l'AFD donne en parametre
 	afd = minimisation(afd);
 	printf("\n/**** AFD Minimise****/\n");
 	AfficherAutomateDeterministe(afd);
 	
-
  	//Permet de tester si la chaine mot est reconnu par l'afd donne en parametre
 	mot = "aaa";
 	motReconnu = verifMot(afd,mot);
     if(motReconnu == 1)
     {
-        printf("MOT RECONNU PAR L'AUTOMATE\n");
+        printf("\n/**Le mot:%s est reconnu par l'automate**/\n",mot);
     }
     else
     {
-        printf("MOT NON RECONNU PAR L'AUTOMATE\n");
+        printf("\n/**Le mot:%s n'est pas reconnu par l'automate**/\n",mot);
     }
 
     
@@ -106,9 +82,6 @@ int main() {
 	free_afn(afnConcatene);
 	free_afn(afnKleene);
 	free_afd(afd);
-	
-	/** A ENLEVER */
-	free_afn(afnConcatene2);
 
 	return 1;
 

@@ -448,7 +448,6 @@ void AfficherAutomateNonDeterministe(AUTOMATEAFN afn){
 	printf("Etat initial (s): %u\n",afn.s);
 
 	//F
-	//printf("taille de F: %d\n",tailleF);
 	if(afn.F!=NULL){
 		printf("Ensemble d'etats accepteurs (F): ");
 		for(i=0;i<afn.tailleF;i++){
@@ -460,7 +459,6 @@ void AfficherAutomateNonDeterministe(AUTOMATEAFN afn){
 	}
 
 	//D
-	//printf("taille de D: %d\n",tailleD);
 	if(afn.D!=NULL){
 		printf("Ensemble des etats transitions (D): ");
 
